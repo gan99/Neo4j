@@ -54,3 +54,18 @@
     <script src="scriptss.js"></script>
 </body>
 </html>
+
+MATCH (client:Party {name: $clientName})
+MATCH (client)-[:IS_PAYOR_OF|IS_PAYEE_OF]->(tx:Transaction)<-[:IS_PAYOR_OF|IS_PAYEE_OF]-(counterparty:Party)
+WHERE client <> counterparty
+  AND tx.date >= date($startDate)
+  AND tx.date <= date($endDate)
+MATCH (counterparty)-[:IS_CUSTOMER_OF]->(fi:FinancialInstitution)
+WITH counterparty, tx, fi
+RETURN fi.fi_name_std AS counterpartyBank,
+       counterparty.party_name AS counterpartyName,
+       SUM(tx.amount) AS totalValue,
+       COUNT(tx) AS transactionCount,
+       CASE WHEN fi.fi_name_std = 'BMO' THEN true ELSE false END AS isBMOClient
+ORDER BY counterpartyBank, totalValue DESC
+LIMIT $topN
