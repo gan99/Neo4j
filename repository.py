@@ -1,0 +1,192 @@
+# app/repository.py
+import logging
+import yaml
+from neo4j import Driver, Record
+from .config import settings
+
+logger = logging.getLogger(__name__)
+
+class GraphRepository:
+    def __init__(self, driver: Driver):
+        self.driver = driver
+        self.query_sets = self._load_queries()
+
+    def _load_queries(self) -> dict:
+        """Loads Cypher query sets from the specified YAML file."""
+        logger.info(f"Loading queries from {settings.queries_file_path}")
+        with open(settings.queries_file_path, 'r') as file:
+            return yaml.safe_load(file)
+
+    def get_available_queries(self) -> list[dict]:
+        """
+        Returns a list of all enabled queries with their metadata,
+        including the caption property.
+        """
+        available_queries = []
+        for name, details in self.query_sets.items():
+            if details.get("enabled", False):
+                available_queries.append({
+                    "name": name,
+                    "display_name": details.get("display_name", name.replace('_', ' ').title()),
+                    "description": details.get("description", ""),
+                    "caption_property": details.get("caption_property", "name"),
+                    "mapping": details.get("mapping", {})
+                })
+        return available_queries
+
+    def get_node_properties(self, node_id: str) -> dict | None:
+        """
+        Fetches all properties for a single node given its element ID.
+        """
+        query = "MATCH (n) WHERE elementId(n) = $node_id RETURN n"
+        params = {"node_id": node_id}
+        try:
+            with self.driver.session() as session:
+                result = session.run(query, params)
+                record = result.single()
+            if record and len(record) > 0:
+                node = record[0]
+                if hasattr(node, 'labels'):
+                    return dict(node.items())
+            return None
+        except Exception:
+            logger.error(f"An exception occurred fetching properties for node {node_id}", exc_info=True)
+            return None
+
+    def get_edge_properties(self, edge_id: str) -> dict | None:
+        """
+        Fetches all properties for a single relationship given its element ID.
+        """
+        query = "MATCH ()-[r]-() WHERE elementId(r) = $edge_id RETURN properties(r) LIMIT 1"
+        params = {"edge_id": edge_id}
+        try:
+            with self.driver.session() as session:
+                result = session.run(query, params)
+                record = result.peek()
+            if record and len(record) > 0:
+                props = record[0]
+                if isinstance(props, dict):
+                    return props
+            return None
+        except Exception:
+            logger.error(f"An exception occurred fetching properties for edge {edge_id}", exc_info=True)
+            return None
+
+    def execute_query(self, query_set_name: str, query_type: str, params: dict) -> list[dict]:
+        """
+        Selects and executes a pre-defined Cypher query with the given parameters.
+        """
+        query_set = self.query_sets.get(query_set_name, {})
+        if not query_set.get("enabled", False):
+            raise PermissionError(f"Query set '{query_set_name}' is disabled or does not exist.")
+        
+        mapping = query_set.get("mapping", {})
+
+        if query_type == "neighbors":
+            node_type = params.get("node_type")
+            neighbor_queries = query_set.get("neighbors", {})
+            query = neighbor_queries.get(node_type, neighbor_queries.get("_default"))
+            if not query:
+                raise ValueError(f"No suitable neighbor query found for node type '{node_type}'.")
+        else: # For 'primary' queries
+            query = query_set.get(query_type)
+            if not query:
+                 raise ValueError(f"Query type '{query_type}' not found in query set '{query_set_name}'.")
+        
+        params.setdefault("limit", 25)
+        params.setdefault("text_search", None)
+
+        logger.info(f"Final Cypher Query:\n{query.strip()}")
+        logger.info(f"Parameters: {params}")
+        
+        with self.driver.session() as session:
+            result = session.run(query, params)
+            records = list(result)
+            
+        logger.info(f"Query returned {len(records)} records.")
+        return self._nodes_to_cytoscape_format(records, mapping)
+
+    def _nodes_to_cytoscape_format(self, records: list[Record], mapping: dict) -> list[dict]:
+        """
+        Convert Neo4j records into a list of Cytoscape.js element dictionaries.
+
+        The first label in Neo4j is not always the most appropriate type for
+        downstream queries (e.g., when a node has both ``:Party`` and
+        ``:BMO_Client`` labels).  To avoid misclassification, this method
+        uses a preferred-order list of labels when deciding which label
+        should populate the ``label`` field on each node.  It also exposes
+        the full set of labels on a ``labels`` field so that clients can
+        inspect all node labels if needed.
+
+        The ``mapping`` dictionary may define ``node_size``, ``node_community``
+        and ``edge_weight`` properties, which are mapped to ``size``, ``parent``
+        and ``weight`` respectively in the returned data.
+        """
+
+        nodes: dict[str, dict] = {}
+        edges: dict[str, dict] = {}
+        parent_nodes: set[str] = set()
+
+        node_size_prop = mapping.get("node_size")
+        node_community_prop = mapping.get("node_community")
+        edge_weight_prop = mapping.get("edge_weight")
+
+        # Priority ordering for labels.  When a node has multiple labels,
+        # the first matching entry in this list will be used for the ``label``
+        # field.  ``Party`` is last so that more specific labels are preferred.
+        preferred_order = [
+            "BMO_Client",
+            "Prospect",
+            "FinancialInstitution",
+            "Transaction",
+            "Account",
+            "PaymentProduct",
+            "AccountProduct",
+            "Party"
+        ]
+
+        for record in records:
+            for _, value in record.items():
+                if value is None:
+                    continue
+                # Node handling
+                if hasattr(value, 'labels'):
+                    node_id = value.element_id
+                    if node_id not in nodes:
+                        labels = list(value.labels) if value.labels else []
+                        preferred_label = None
+                        for lbl in preferred_order:
+                            if lbl in labels:
+                                preferred_label = lbl
+                                break
+                        if preferred_label is None and labels:
+                            preferred_label = labels[0]
+                        node_data: dict[str, any] = {
+                            "id": node_id,
+                            "label": preferred_label or "Node",
+                            "labels": labels,
+                            "name": value.get("name", "Unnamed"),
+                        }
+                        if node_size_prop and value.get(node_size_prop) is not None:
+                            node_data["size"] = value.get(node_size_prop)
+                        if node_community_prop and value.get(node_community_prop) is not None:
+                            community_id = str(value.get(node_community_prop))
+                            node_data["parent"] = community_id
+                            parent_nodes.add(community_id)
+                        nodes[node_id] = {"data": node_data}
+                # Relationship handling
+                elif hasattr(value, 'start_node'):
+                    edge_id = value.element_id
+                    if edge_id not in edges:
+                        edge_data: dict[str, any] = {
+                            "id": edge_id,
+                            "source": value.start_node.element_id,
+                            "target": value.end_node.element_id,
+                            "label": type(value).__name__,
+                        }
+                        if edge_weight_prop and value.get(edge_weight_prop) is not None:
+                            edge_data["weight"] = value.get(edge_weight_prop)
+                        edges[edge_id] = {"data": edge_data}
+
+        compound_nodes = [{"data": {"id": pid}} for pid in parent_nodes]
+        return list(nodes.values()) + list(edges.values()) + compound_nodes
