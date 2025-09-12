@@ -1,0 +1,50 @@
+default_graph:
+  display_name: "Prospect View"
+  description: "Identify high-value Prospects from BMO Clients using interaction volume and frequency."
+  enabled: true
+  caption_property: "name"
+
+  mapping:
+    node_size: "total_amount"
+    edge_weight: "count"
+
+  table_display:
+    _default: ["name"]
+    Financial_Institution: ["name", "fi_std_name"]
+    Client: ["name", "total_amount"]
+    Prospect: ["name", "total_amount"]
+    Transaction: ["pmt_amt", "pmt_cur"]
+    Payment_Product: ["name"]
+    IS_CUSTOMER_OF: ["amount"]
+    INCOMING: ["amount", "count"]
+    OUTGOING: ["amount", "count"]
+
+  primary: |
+    MATCH (n:Party:Client)
+    WHERE $text_search IS NULL OR toLower(n.name) CONTAINS toLower($text_search)
+    RETURN n
+    ORDER BY coalesce(n.total_amount, 0) DESC
+    LIMIT toInteger($limit)
+
+  neighbors:
+    Client: |
+      MATCH (n:Party:Client) WHERE elementId(n) = $node_id
+      OPTIONAL MATCH (p_in:Party:Prospect)-[rin:INCOMING]->(n)
+      OPTIONAL MATCH (n)-[rout:OUTGOING]->(p_out:Party:Prospect)
+      RETURN n, rin, p_in, rout, p_out
+      ORDER BY coalesce(p_in.total_amount, 0) DESC, coalesce(p_out.total_amount, 0) DESC
+      LIMIT toInteger($limit)
+
+    Prospect: |
+      MATCH (p:Party:Prospect) WHERE elementId(p) = $node_id
+      OPTIONAL MATCH (p)-[:IS_CUSTOMER_OF]->(fi:Financial_Institution)
+      RETURN p, fi
+      LIMIT toInteger($limit)
+
+    Financial_Institution: |
+      MATCH (fi:Financial_Institution) WHERE elementId(fi) = $node_id
+      OPTIONAL MATCH (p:Party:Prospect)-[:IS_CUSTOMER_OF]->(fi)
+      OPTIONAL MATCH (c:Party:Client)-[out:OUTGOING]->(p)
+      OPTIONAL MATCH (p)-[inc:INCOMING]->(c)
+      RETURN fi, p, c, out, inc
+      LIMIT toInteger($limit)
