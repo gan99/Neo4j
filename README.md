@@ -1,8 +1,4 @@
-Request for Confirmation of Completion – Security Education Requirements
-Dear Security Education Team,
-I hope this message finds you well.
-Could you kindly confirm whether I have completed all the necessary requirements for Security Education? I’ve been informed that if any mandatory steps remain outstanding, I may face disconnection from all applications effective September 26th.
-I would appreciate it if you could provide written confirmation at your earliest convenience so I can ensure everything is in order.
-Thank you for your support.
+Please find attached the screenshot of the confirmation email from the Security Education team, confirming that I’ve completed all the required steps.
+Let me know if anything else is needed.
 Best regards,
 Ganesh
