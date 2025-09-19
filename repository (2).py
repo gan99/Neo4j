@@ -1,15 +1,22 @@
-path = settings.queries_file_path
-        if not path:
-            logger.info("No queries_file_path specified; starting with empty query sets")
-            return {}
-        try:
-            p = Path(path)
-            logger.info(f"Loading queries from {p.resolve()}")
-            with p.open("r") as f:
-                return yaml.safe_load(f) or {}
-        except FileNotFoundError:
-            logger.warning(f"queries.yaml not found at {path}; will expect injection from DSS backend")
-            return {}
-        except Exception:
-            logger.exception("Failed to load queries.yaml; falling back to empty")
-            return {}
+def get_driver() -> Driver:
+    """Returns the singleton Neo4j driver instance, creating it if necessary."""
+    global _driver
+    if _driver is None:
+        # (optional) friendly guard if secrets not applied yet
+        if not settings.neo4j_uri or not settings.neo4j_user or not settings.neo4j_password:
+            raise RuntimeError(
+                "Neo4j credentials are not set. In DSS, define secrets "
+                "'neo4j_uri', 'neo4j_user', 'neo4j_password', 'neo4j_database'."
+            )
+        logger.info(f"Initializing Neo4j driver for database '{settings.neo4j_database}'...")
+        _driver = GraphDatabase.driver(settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password))
+        _driver.verify_connectivity()
+        logger.info("Neo4j driver initialized successfully.")
+    return _driver
+
+def close_driver():
+    global _driver
+    if _driver:
+        logger.info("Closing Neo4j driver.")
+        _driver.close()
+        _driver = None
