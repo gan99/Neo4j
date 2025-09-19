@@ -1,191 +1,116 @@
-# app/repository.py
+# backend.py — DSS Code Webapp (Python) backend
+
 import logging
 import yaml
-from neo4j import Driver, Record
-from neo4j.spatial import Point
-from neo4j.time import Date, Time, DateTime, Duration
-from .config import settings
+from flask import request, jsonify
+import dataiku
+
+# ---- import your project libraries ----
+from udm_app.config import settings          # pydantic settings object you created
+from udm_app.db import get_driver            # your Neo4j driver factory (singleton)
+from udm_app.repository import GraphRepository
 
 logger = logging.getLogger(__name__)
 
-class GraphRepository:
-    def __init__(self, driver: Driver):
-        self.driver = driver
-        self.query_sets = self._load_queries()
+# ---- 1) Read DSS secrets securely and override settings ----
+def _read_dss_secrets():
+    client = dataiku.api_client()
+    info = client.get_auth_info(with_secrets=True) or {}
+    secrets_list = info.get("secrets", []) or []
+    return {s.get("key"): s.get("value") for s in secrets_list if "key" in s}
 
-    def _load_queries(self) -> dict:
-        """Loads Cypher query sets from the specified YAML file."""
-        logger.info(f"Loading queries from {settings.queries_file_path}")
-        with open(settings.queries_file_path, 'r') as file:
-            return yaml.safe_load(file)
+SECRETS = _read_dss_secrets()
+for k in ("neo4j_uri", "neo4j_user", "neo4j_password", "neo4j_database"):
+    if SECRETS.get(k):
+        setattr(settings, k, SECRETS[k])
 
-    def get_available_queries(self) -> list[dict]:
-        """
-        Returns a list of all enabled queries with their metadata,
-        including the caption property and table display config.
-        """
-        available_queries = []
-        for name, details in self.query_sets.items():
-            if details.get("enabled", False):
-                available_queries.append({
-                    "name": name,
-                    "display_name": details.get("display_name", name.replace('_', ' ').title()),
-                    "description": details.get("description", ""),
-                    "caption_property": details.get("caption_property", "name"),
-                    "mapping": details.get("mapping", {}),
-                    "table_display": details.get("table_display", {})
-                })
-        return available_queries
+# ---- 2) Init Neo4j driver (uses settings we just overridden) ----
+driver = get_driver()
 
-    def get_node_properties(self, node_id: str) -> dict | None:
-        """
-        Fetches all properties for a single node given its element ID.
-        """
-        query = "MATCH (n) WHERE elementId(n) = $node_id RETURN n"
-        params = {"node_id": node_id}
-        try:
-            with self.driver.session() as session:
-                result = session.run(query, params)
-                record = result.single()
-            if record and len(record) > 0:
-                node = record[0]
-                if hasattr(node, 'labels'):
-                    return dict(node.items())
-            return None
-        except Exception:
-            logger.error(f"An exception occurred fetching properties for node {node_id}", exc_info=True)
-            return None
+# ---- 3) Load queries.yaml from Managed Folder ----
+QUERIES_FOLDER_ID = "I7CQQmMN"   # <-- your folder ID
 
-    def get_edge_properties(self, edge_id: str) -> dict | None:
-        """
-        Fetches all properties for a single relationship given its element ID.
-        """
-        query = "MATCH ()-[r]-() WHERE elementId(r) = $edge_id RETURN properties(r) LIMIT 1"
-        params = {"edge_id": edge_id}
-        try:
-            with self.driver.session() as session:
-                result = session.run(query, params)
-                record = result.peek()
-            if record and len(record) > 0:
-                props = record[0]
-                if isinstance(props, dict):
-                    return props
-            return None
-        except Exception:
-            logger.error(f"An exception occurred fetching properties for edge {edge_id}", exc_info=True)
-            return None
+def load_queries_from_folder():
+    folder = dataiku.Folder(QUERIES_FOLDER_ID)
+    with folder.get_download_stream("queries.yaml") as f:
+        return yaml.safe_load(f)
 
-    def execute_query(self, query_set_name: str, query_type: str, params: dict) -> dict:
-        """
-        Selects and executes a pre-defined Cypher query and returns both
-        graph-formatted and raw record data.
-        """
-        query_set = self.query_sets.get(query_set_name, {})
-        if not query_set.get("enabled", False):
-            raise PermissionError(f"Query set '{query_set_name}' is disabled or does not exist.")
-        
-        mapping = query_set.get("mapping", {})
-        caption_property = query_set.get("caption_property", "name")
+# Build repository and inject queries from folder (overrides file path)
+repo = GraphRepository(driver)
+try:
+    repo.query_sets = load_queries_from_folder()
+    logger.info("Loaded queries.yaml from Managed Folder %s", QUERIES_FOLDER_ID)
+except Exception:
+    logger.exception("Failed to load queries.yaml from Managed Folder; using repo defaults.")
 
-        if query_type == "neighbors":
-            node_type = params.get("node_type")
-            neighbor_queries = query_set.get("neighbors", {})
-            query = neighbor_queries.get(node_type, neighbor_queries.get("_default"))
-            if not query:
-                raise ValueError(f"No suitable neighbor query found for node type '{node_type}'.")
-        else: # For 'primary' queries
-            query = query_set.get(query_type)
-            if not query:
-                 raise ValueError(f"Query type '{query_type}' not found in query set '{query_set_name}'.")
-        
-        params.setdefault("limit", 10)
-        params.setdefault("text_search", None)
+# ============================================================
+# Flask routes (DSS provides `app`)
+# ============================================================
 
-        logger.info(f"Final Cypher Query:\n{query.strip()}")
-        logger.info(f"Parameters: {params}")
-        
-        with self.driver.session() as session:
-            result = session.run(query, params)
-            records = list(result)
-            keys = result.keys()
-            
-        logger.info(f"Query returned {len(records)} records.")
-        
-        return {
-            "graph": self._nodes_to_cytoscape_format(records, mapping, caption_property),
-            "records": self._records_to_json_serializable(records),
-            "keys": keys
-        }
+@app.route('/api/connection-info', methods=['GET'])
+def connection_info():
+    return jsonify({
+        "user_name": settings.neo4j_user,
+        "database_name": settings.neo4j_database
+    })
 
-    def _records_to_json_serializable(self, records: list[Record]) -> list[dict]:
-        """
-        Converts a list of Neo4j Records into a JSON-serializable format,
-        handling complex types like Nodes and Relationships.
-        """
-        def serialize_value(value):
-            if isinstance(value, (Date, Time, DateTime, Duration)):
-                return str(value)
-            if isinstance(value, Point):
-                return {"srid": value.srid, "x": value.x, "y": value.y, "z": value.z}
-            if hasattr(value, 'labels'):  # It's a Node
-                return {
-                    "_type": "node",
-                    "_labels": list(value.labels),
-                    "element_id": getattr(value, "element_id", None),
-                    "properties": dict(value.items())
-                }
-            if hasattr(value, 'start_node'):  # It's a Relationship
-                return {
-                    "_type": "relationship",
-                    "_relation_type": type(value).__name__,
-                    "element_id": getattr(value, "element_id", None),
-                    "properties": dict(value.items())
-                }
-            if isinstance(value, dict):
-                return {k: serialize_value(v) for k, v in value.items()}
-            return value
+@app.route('/api/queries', methods=['GET'])
+def list_queries():
+    try:
+        return jsonify(repo.get_available_queries())
+    except Exception:
+        logger.exception("Error listing queries")
+        return jsonify({"error": "Failed to list queries"}), 500
 
-        return [
-            {key: serialize_value(record[key]) for key in record.keys()}
-            for record in records
-        ]
+@app.route('/api/search/<query_set_name>', methods=['GET'])
+def search(query_set_name):
+    try:
+        # all query params pass straight through (limit, text_search, months, etc.)
+        params = dict(request.args)
+        params.setdefault("months", 1)
+        result = repo.execute_query(query_set_name, "primary", params)
+        return jsonify(result)
+    except Exception:
+        logger.exception("Error executing primary query: %s", query_set_name)
+        return jsonify({"error": "Failed to run query"}), 500
 
-    def _nodes_to_cytoscape_format(self, records: list[Record], mapping: dict, caption_property: str) -> list[dict]:
-        nodes, edges, parent_nodes = {}, {}, set()
-        
-        node_size_prop = mapping.get("node_size")
-        node_community_prop = mapping.get("node_community")
-        edge_weight_prop = mapping.get("edge_weight")
+@app.route('/api/nodes/<node_id>/neighbors', methods=['GET'])
+def neighbors(node_id):
+    try:
+        params = dict(request.args)
+        params["node_id"] = node_id
+        # which query set? JS sends ?query_key=... (hidden input stores active query)
+        query_key = params.get("query_key") or "default_graph"
+        result = repo.execute_query(query_key, "neighbors", params)
+        return jsonify(result)
+    except Exception:
+        logger.exception("Error fetching neighbors for node %s", node_id)
+        return jsonify({"error": "Failed to fetch neighbors"}), 500
 
-        for record in records:
-            for _, value in record.items():
-                if value is None: continue
-                if hasattr(value, 'labels'): # It's a Node
-                    node_id = value.element_id
-                    if node_id not in nodes:
-                        node_label = list(value.labels)[0] if value.labels else "Node"
-                        caption = value.get(caption_property, node_label)
-                        node_data = {
-                            "id": node_id,
-                            "label": node_label,
-                            "name": caption
-                        }
+@app.route('/api/nodes/<node_id>/properties', methods=['GET'])
+def node_properties(node_id):
+    try:
+        props = repo.get_node_properties(node_id)
+        return jsonify(props or {})
+    except Exception:
+        logger.exception("Error fetching node properties: %s", node_id)
+        return jsonify({}), 500
 
-                        if node_size_prop and value.get(node_size_prop) is not None:
-                            node_data["size"] = value.get(node_size_prop)
-                        if node_community_prop and value.get(node_community_prop) is not None:
-                            community_id = str(value.get(node_community_prop))
-                            node_data["parent"] = community_id
-                            parent_nodes.add(community_id)
-                        nodes[node_id] = {"data": node_data}
+@app.route('/api/edges/<edge_id>/properties', methods=['GET'])
+def edge_properties(edge_id):
+    try:
+        props = repo.get_edge_properties(edge_id)
+        return jsonify(props or {})
+    except Exception:
+        logger.exception("Error fetching edge properties: %s", edge_id)
+        return jsonify({}), 500
 
-                elif hasattr(value, 'start_node'): # It's a Relationship
-                    edge_id = value.element_id
-                    if edge_id not in edges:
-                        edge_data = { "id": edge_id, "source": value.start_node.element_id, "target": value.end_node.element_id, "label": type(value).__name__ }
-                        if edge_weight_prop and value.get(edge_weight_prop) is not None:
-                            edge_data["weight"] = value.get(edge_weight_prop)
-                        edges[edge_id] = {"data": edge_data}
-        
-        compound_nodes = [{"data": {"id": pid}} for pid in parent_nodes]
-        return list(nodes.values()) + list(edges.values()) + compound_nodes
+# Optional: hot-reload queries.yaml without restarting the webapp
+@app.route('/api/reload-queries', methods=['POST'])
+def reload_queries():
+    try:
+        repo.query_sets = load_queries_from_folder()
+        return jsonify({"status": "ok"})
+    except Exception:
+        logger.exception("Error reloading queries.yaml")
+        return jsonify({"status": "error"}), 500
