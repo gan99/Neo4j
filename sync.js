@@ -1,39 +1,50 @@
-// --- Summary Calculation ---
-let summaryHTML = `<span class="summary-item"><strong>Records:</strong> ${records.length}</span>`;
-const amountTotals = {};
-const seenByHeader = {}; // header -> Set of element_ids already tallied
+function renderTable(rows) {
+  const tbl = document.getElementById("tbl");
+  tbl.innerHTML = "";
 
-records.forEach(record => {
-  keys.forEach(key => {
-    const cell = record[key];
-    if (!cell || !cell.properties) return;
+  if (!rows || rows.length === 0) {
+    tbl.innerHTML = "<tbody><tr><td>No data</td></tr></tbody>";
+    return;
+  }
 
-    const props  = cell.properties;
-    const type   = cell._labels?.[0] || cell._relation_type || 'Amount';
-    const header = `${type} (Total)`;
-    const elemId = cell.element_id || JSON.stringify(props);
+  const cols = Object.keys(rows[0]);
 
-    // prefer total_amount, then amount, else any '*amount*' numeric
-    let val = (typeof props.total_amount === 'number') ? props.total_amount
-            : (typeof props.amount === 'number')       ? props.amount
-            : null;
-    if (val === null) {
-      for (const [k, v] of Object.entries(props)) {
-        if (typeof v === 'number' && k.toLowerCase().includes('amount')) { val = v; break; }
-      }
-    }
-
-    if (typeof val === 'number') {
-      if (!seenByHeader[header]) seenByHeader[header] = new Set();
-      if (!seenByHeader[header].has(elemId)) {
-        amountTotals[header] = (amountTotals[header] || 0) + val;
-        seenByHeader[header].add(elemId);
-      }
-    }
+  const thead = document.createElement("thead");
+  const trh = document.createElement("tr");
+  cols.forEach((c) => {
+    const th = document.createElement("th");
+    th.textContent = c;
+    trh.appendChild(th);
   });
-});
+  thead.appendChild(trh);
+  tbl.appendChild(thead);
 
-for (const [k, total] of Object.entries(amountTotals)) {
-  summaryHTML += `<span class="summary-item"><strong>${k}:</strong> ${total.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</span>`;
+  const tbody = document.createElement("tbody");
+  rows.forEach((r) => {
+    const tr = document.createElement("tr");
+    cols.forEach((c) => {
+      const td = document.createElement("td");
+      td.textContent = r[c];
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  tbl.appendChild(tbody);
 }
-summaryTotals.innerHTML = summaryHTML;
+
+async function loadRows() {
+  const n = document.getElementById("rows").value || 100;
+  const status = document.getElementById("status");
+  status.textContent = "Loading...";
+
+  // Dataiku helper builds the correct proxied URL to your backend
+  const url = getWebAppBackendUrl("get-sample?n=" + encodeURIComponent(n));
+
+  const res = await fetch(url);
+  const data = await res.json();
+  renderTable(data.rows);
+  status.textContent = "";
+}
+
+document.getElementById("load").addEventListener("click", loadRows);
+window.onload = loadRows;
