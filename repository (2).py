@@ -1,22 +1,25 @@
-def get_driver() -> Driver:
-    """Returns the singleton Neo4j driver instance, creating it if necessary."""
-    global _driver
-    if _driver is None:
-        # (optional) friendly guard if secrets not applied yet
-        if not settings.neo4j_uri or not settings.neo4j_user or not settings.neo4j_password:
-            raise RuntimeError(
-                "Neo4j credentials are not set. In DSS, define secrets "
-                "'neo4j_uri', 'neo4j_user', 'neo4j_password', 'neo4j_database'."
-            )
-        logger.info(f"Initializing Neo4j driver for database '{settings.neo4j_database}'...")
-        _driver = GraphDatabase.driver(settings.neo4j_uri, auth=(settings.neo4j_user, settings.neo4j_password))
-        _driver.verify_connectivity()
-        logger.info("Neo4j driver initialized successfully.")
-    return _driver
+# --- Simple Dataiku webapp backend ---
+import dataiku
+import pandas as pd
+from flask import request, jsonify
 
-def close_driver():
-    global _driver
-    if _driver:
-        logger.info("Closing Neo4j driver.")
-        _driver.close()
-        _driver = None
+# 👇 CHANGE THIS to a dataset that exists in your project
+DATASET_NAME = "YOUR_DATASET_NAME"
+
+@app.route("/ping")
+def ping():
+    return "ok"
+
+@app.route("/get-sample")
+def get_sample():
+    """Return first N rows as JSON (defaults to 100)."""
+    n = int(request.args.get("n", 100))
+    ds = dataiku.Dataset(DATASET_NAME)
+    df = ds.get_dataframe(limit=n)
+
+    # Make datetimes JSON-friendly
+    for c in df.columns:
+        if pd.api.types.is_datetime64_any_dtype(df[c]):
+            df[c] = df[c].astype(str)
+
+    return jsonify({"rows": df.to_dict(orient="records")})
