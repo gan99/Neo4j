@@ -1,10 +1,62 @@
-CALL {
-  MATCH (n:Client)
-  WITH n.id AS id, COLLECT(n) AS nodes
-  WHERE SIZE(nodes) > 1
-  CALL {
-    WITH nodes
-    UNWIND tail(nodes) AS toDelete
-    DETACH DELETE toDelete
-  }
-} IN TRANSACTIONS OF 10000 ROWS;
+WITH params AS (
+  SELECT CAST(:client_id AS VARCHAR) AS client_id
+)
+, ap_used AS (
+  SELECT DISTINCT ap.account_product_id, ap.name AS account_product_name
+  FROM params p
+  JOIN party_account pa         ON pa.party_id = p.client_id
+  JOIN account_has_product ahp  ON ahp.account_id = pa.account_id
+  JOIN account_product ap       ON ap.account_product_id = ahp.account_product_id
+)
+, tx_union AS (
+  SELECT
+    t.payment_product_id,
+    'SEND'::VARCHAR AS direction,
+    t.debited_fi_id     AS client_fi_id,
+    t.payee_party_id    AS counterparty_id,
+    t.amount, t.currency
+  FROM params p
+  JOIN transaction t
+    ON t.payor_party_id = p.client_id
+  UNION ALL
+  SELECT
+    t.payment_product_id,
+    'RECEIVE'::VARCHAR AS direction,
+    t.credited_fi_id   AS client_fi_id,
+    t.payor_party_id   AS counterparty_id,
+    t.amount, t.currency
+  FROM params p
+  JOIN transaction t
+    ON t.payee_party_id = p.client_id
+)
+SELECT
+  p.client_id,
+  ap.account_product_id,
+  ap.account_product_name,
+  pp.payment_product_id,
+  pp.name                AS payment_product_name,
+  x.direction,
+  fi.fi_id               AS client_fi_id,
+  fi.name                AS client_fi_name,
+  cp.party_id            AS counterparty_party_id,
+  cp.party_name          AS counterparty_name,
+  CASE
+    WHEN EXISTS (
+      SELECT 1 FROM party_fi pf
+      JOIN financial_institution f2 ON f2.fi_id = pf.fi_id
+      WHERE pf.party_id = cp.party_id AND f2.name = :bmo_fi_name
+    ) THEN 'Client' ELSE 'Prospect'
+  END                    AS counterparty_type,
+  SUM(x.amount)          AS total_amount,
+  COUNT(*)               AS txn_count
+FROM params p
+LEFT JOIN ap_used ap                  ON TRUE
+JOIN tx_union x                       ON TRUE
+LEFT JOIN payment_product pp          ON pp.payment_product_id = x.payment_product_id
+LEFT JOIN financial_institution fi    ON fi.fi_id = x.client_fi_id
+LEFT JOIN party cp                    ON cp.party_id = x.counterparty_id
+GROUP BY
+  p.client_id, ap.account_product_id, ap.account_product_name,
+  pp.payment_product_id, pp.name, x.direction,
+  fi.fi_id, fi.name, cp.party_id, cp.party_name
+ORDER BY total_amount DESC;
