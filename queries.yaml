@@ -1,0 +1,55 @@
+# queries.yaml
+client_drilldown:
+  enabled: true
+  display_name: "Client → Account → Rail → FI → Prospect"
+  description: "Double-click to travel: Client -[HAS]-> AccountProduct -[SENDS/RECEIVES]- PaymentProduct -[`OFFERED BY`]-> FinancialInstitution <-[`CUSTOMER OF`]- Prospect"
+  caption_property: "name"
+
+  # Optional cosmetics for node sizes & table
+  mapping:
+    node_size: total_amount        # Clients/Prospects have totals; others will just default size
+  table_display:
+    Client: [party_id, name, total_amount, total_volume]
+    AccountProduct: [account_product_id, name]
+    PaymentProduct: [payment_product_id, name]
+    FinancialInstitution: [fi_id, name]
+    Prospect: [party_id, name, total_amount, total_volume]
+    _default: [name]
+
+  # Initial graph when you pick this "Relationship Map" in the left nav
+  primary: |
+    WITH $limit AS limit, coalesce($text_search, '') AS ts
+    MATCH (c:Client)
+    WHERE ts = '' OR toLower(c.name) CONTAINS toLower(ts) OR c.party_id = ts
+    OPTIONAL MATCH (c)-[r:HAS]->(a:AccountProduct)
+    RETURN c, r, a
+    LIMIT limit
+
+  # What to run on double-click, per node label
+  neighbors:
+    Client: |
+      MATCH (c:Client) WHERE elementId(c) = $node_id
+      OPTIONAL MATCH (c)-[r:HAS]->(a:AccountProduct)
+      RETURN c, r, a
+
+    AccountProduct: |
+      MATCH (a:AccountProduct) WHERE elementId(a) = $node_id
+      OPTIONAL MATCH (a)-[s:SENDS]->(pp1:PaymentProduct)
+      OPTIONAL MATCH (pp2:PaymentProduct)-[rcv:RECEIVES]->(a)
+      RETURN a, s, pp1, rcv, pp2
+
+    PaymentProduct: |
+      MATCH (pp:PaymentProduct) WHERE elementId(pp) = $node_id
+      OPTIONAL MATCH (pp)-[ob:`OFFERED BY`]->(fi:FinancialInstitution)
+      RETURN pp, ob, fi
+
+    FinancialInstitution: |
+      MATCH (fi:FinancialInstitution) WHERE elementId(fi) = $node_id
+      OPTIONAL MATCH (p:Prospect)-[co:`CUSTOMER OF`]->(fi)
+      RETURN fi, co, p
+
+    # Fallback if you double-click any other label
+    _default: |
+      MATCH (n) WHERE elementId(n) = $node_id
+      OPTIONAL MATCH (n)-[r]-(m)
+      RETURN n, r, m
