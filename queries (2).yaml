@@ -1,0 +1,60 @@
+# queries.yaml — Context-aware expansion for Client → Account_Product → Payment Product → Financial Institution → Prospect
+client_account_payment_fi_prospect_ctx:
+  enabled: true
+  display_name: "Client context: Account → Payment → FI → Prospect"
+  description: "Double-click expands in the context of the selected Client."
+  caption_property: "name"
+
+  table_display:
+    Client: [party_id, name, total_amount, total_volume]
+    Account_Product: [account_product_id, name]
+    Payment Product: [payment_product_id, name]
+    Financial Institution: [fi_id, name]
+    Prospect: [party_id, name, total_amount, total_volume]
+    _default: [name]
+
+  primary: |
+    WITH $limit AS limit, coalesce($text_search,'') AS ts
+    MATCH (c:Client)
+    WHERE ts = '' OR toLower(c.name) CONTAINS toLower(ts) OR c.party_id = ts
+    OPTIONAL MATCH (c)-[r:HAS]->(a:`Account_Product`)
+    RETURN c, r, a
+    LIMIT limit
+
+  neighbors:
+    Client: |
+      MATCH (c:Client) WHERE elementId(c) = $node_id
+      OPTIONAL MATCH (c)-[r:HAS]->(a:`Account_Product`)
+      RETURN c, r, a
+
+    Account_Product: |
+      WITH $node_id AS a_eid, $Client_node_id AS c_eid
+      MATCH (a:`Account_Product`) WHERE elementId(a) = a_eid
+      OPTIONAL MATCH (c:Client) WHERE elementId(c) = c_eid
+      OPTIONAL MATCH (a)-[h:`SENDS RECEIVES`]-(b:`Payment Product`)
+      WITH a, c, b, h
+      WHERE c IS NULL OR NOT EXISTS( ()-[:USES]->() ) OR (c)-[:USES]->(b)
+      RETURN a, h, b
+
+    Payment Product: |
+      WITH $node_id AS pp_eid, $Client_node_id AS c_eid, $Account_Product_node_id AS a_eid
+      MATCH (pp:`Payment Product`) WHERE elementId(pp) = pp_eid
+      OPTIONAL MATCH (c:Client) WHERE elementId(c) = c_eid
+      OPTIONAL MATCH (pp)-[g:OFFERED_BY]->(fi:`Financial Institution`)
+      WITH pp, g, fi, c
+      WHERE c IS NULL OR (c)-[:SETTELED_BY]->(fi)
+      RETURN pp, g, fi
+
+    Financial Institution: |
+      WITH $node_id AS fi_eid, $Client_node_id AS c_eid
+      MATCH (fi:`Financial Institution`) WHERE elementId(fi) = fi_eid
+      OPTIONAL MATCH (c:Client) WHERE elementId(c) = c_eid
+      OPTIONAL MATCH (p:Prospect)-[i:IS_CUSTOMER_OF]-(fi)
+      WITH fi, p, i, c
+      WHERE c IS NULL OR (c)-[:HAS_PROSPECT]->(p)
+      RETURN fi, i, p
+
+    _default: |
+      MATCH (n) WHERE elementId(n) = $node_id
+      OPTIONAL MATCH (n)-[r]-(m)
+      RETURN n, r, m
