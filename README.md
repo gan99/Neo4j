@@ -1,3 +1,1 @@
-const API = (p) => (typeof getWebAppBackendUrl === 'function'
-  ? getWebAppBackendUrl(p.replace(/^\//,''))
-  : p);
+(ele) => ele.data('Name') || ele.data('name') || ele.data('label') || '',
