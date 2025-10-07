@@ -1,50 +1,115 @@
-# -*- coding: utf-8 -*-
-# Dataiku PySpark recipe: self_fuzzy_output -> Std_Party_Name_Lookup_Batch_Fin
+WITH src AS (
+  SELECT
+      party_name,
+      ym_id,
+      LOWER(COALESCE(party_name, '')) AS raw
+  FROM self_fuzzy_output
+),
 
-import dataiku
-from dataiku import spark as dkuspark, recipe
-from pyspark.sql import functions as F
+-- Remove parentheses; normalize punctuation (& -> and); drop all other punctuation
+step1 AS (
+  SELECT
+      party_name,
+      ym_id,
+      REGEXP_REPLACE(raw, '\\((.*?)\\)', ' ') AS s1
+  FROM src
+),
+step2 AS (
+  SELECT
+      party_name,
+      ym_id,
+      REGEXP_REPLACE(REPLACE(s1, '&', ' and '), '[^a-z0-9\\s]', ' ') AS s2
+  FROM step1
+),
 
-INPUT_DATASET  = "self_fuzzy_output"
-OUTPUT_DATASET = "Std_Party_Name_Lookup_Batch_Fin"
+-- Expand common abbreviations
+step3 AS (
+  SELECT
+      party_name,
+      ym_id,
+      REGEXP_REPLACE(
+        REGEXP_REPLACE(s2, '\\bsec\\b', ' securities '),
+        '\\b(u\\.?s\\.?a\\.?|us)\\b', ' usa '
+      ) AS s3
+  FROM step2
+),
 
-spark = dkuspark.get_spark_session()
+-- Remove account-like noise tokens and standalone numbers
+step4 AS (
+  SELECT
+      party_name,
+      ym_id,
+      REGEXP_REPLACE(s3, '\\b(acct|account|acc|gla|dda|chk|ck|no|#)\\s*\\d+\\b', ' ') AS s4a
+  FROM step3
+),
+step5 AS (
+  SELECT
+      party_name,
+      ym_id,
+      REGEXP_REPLACE(s4a, '\\b\\d+\\b', ' ') AS s4
+  FROM step4
+),
 
-# Load input
-in_ds = dataiku.Dataset(INPUT_DATASET)
-df = dkuspark.get_dataframe(spark, in_ds)
+-- Normalize company suffixes (keep them, but map to canonical tokens)
+suffix_norm AS (
+  SELECT
+      party_name,
+      ym_id,
+      REGEXP_REPLACE(
+        REGEXP_REPLACE(
+          REGEXP_REPLACE(
+            REGEXP_REPLACE(
+              REGEXP_REPLACE(
+                REGEXP_REPLACE(
+                  REGEXP_REPLACE(
+                    REGEXP_REPLACE(
+                      REGEXP_REPLACE(
+                        REGEXP_REPLACE(s4, '\\b(incorporated|inc)\\b', ' inc '),
+                        '\\b(corporation|corp)\\b', ' corp '
+                      ),
+                      '\\b(company|co)\\b', ' co '
+                    ),
+                    '\\b(limited|ltd)\\b', ' ltd '
+                  ),
+                  '\\b(l\\s*l\\s*c|llc)\\b', ' llc '
+                ),
+                '\\b(l\\s*l\\s*p|llp)\\b', ' llp '
+              ),
+              '\\b(l\\s*p|lp)\\b', ' lp '
+            ),
+            '\\b(plc)\\b', ' plc '
+          ),
+          '\\b(gmbh)\\b', ' gmbh '
+        ),
+        '\\b(ag|spa|nv|bv)\\b', ' \\1 '
+      ) AS s5
+  FROM step5
+),
 
-# --- standardizer: keep 'inc.' (as in your example), expand sec→securities, us→usa, strip account-like tails ---
-def standardize_name(col):
-    c = F.lower(F.coalesce(col, F.lit('')))
-    c = F.regexp_replace(c, r'\((.*?)\)', ' ')
-    c = F.regexp_replace(c, r'&', ' and ')
-    c = F.regexp_replace(c, r'[^a-z0-9\s\.]', ' ')             # keep letters/numbers/spaces/dot
-    c = F.regexp_replace(c, r'\bsec\b', ' securities ')
-    c = F.regexp_replace(c, r'\bu\.?s\.?a\.?\b', ' usa ')
-    c = F.regexp_replace(c, r'\bu\.?s\.?\b', ' usa ')
-    c = F.regexp_replace(c, r'\b(acct|account|acc|gla|dda|chk|ck|no|#)\s*\d+\b', ' ')
-    c = F.regexp_replace(c, r'\b\d+\b', ' ')
-    c = F.regexp_replace(c, r'\binc\b\.?', ' inc. ')           # normalize to 'inc.'
-    c = F.regexp_replace(c, r'(inc\.)\s+(inc\.)', r'\1')       # collapse double 'inc.'
-    c = F.regexp_replace(c, r'\bn\.?\s*a\.?\b', ' n.a. ')
-    c = F.regexp_replace(c, r'\s+', ' ')
-    c = F.trim(c)
-    c = F.when(F.rlike(c, r'.*\binc$'), F.concat_ws('', c, F.lit('.'))).otherwise(c)
-    return c
+-- Collapse spaces and trim
+collapsed AS (
+  SELECT
+      party_name,
+      ym_id,
+      TRIM(REGEXP_REPLACE(s5, '\\s+', ' ')) AS s6
+  FROM suffix_norm
+),
 
-# Ensure expected columns exist and are strings
-df = (df
-      .withColumn("party_name", F.col("party_name").cast("string"))
-      .withColumn("ym_id", F.col("ym_id").cast("string"))
-     )
-
-# Recompute standardized name from party_name (do NOT touch original party_name/ym_id)
-df_out = (df
-    .withColumn("party_name_std", standardize_name(F.col("party_name")))
-    .select("party_name", "party_name_std", "ym_id")
+-- Add trailing period if the name ends with a known suffix (to match your example style)
+final_std AS (
+  SELECT
+      party_name,
+      ym_id,
+      CASE
+        WHEN s6 RLIKE '\\b(inc|corp|co|llc|ltd|llp|lp|plc|gmbh|ag|spa|nv|bv)$'
+          THEN CONCAT(s6, '.')
+        ELSE s6
+      END AS party_name_std
+  FROM collapsed
 )
 
-# Write output
-out_ds = dataiku.Dataset(OUTPUT_DATASET)
-dkuspark.write_with_schema(out_ds, df_out)
+SELECT
+  party_name,               -- unchanged
+  party_name_std,           -- standardized
+  ym_id
+FROM final_std;
