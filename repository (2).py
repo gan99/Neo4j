@@ -1,123 +1,91 @@
 # -*- coding: utf-8 -*-
-# Inputs:  self_fuzzy_output   (cols: party_name, party_name_std, ym_id)
-# Output:  Std_Party_Name_Lookup_Batch_Fin (cols: party_name, party_name_std, ym_id)
+# Dataiku PySpark recipe: self_fuzzy_output -> Std_Party_Name_Lookup_Batch_Fin
+
+import os
+if isinstance(os.environ.get("PYSPARK_GATEWAY_PORT"), bytes):
+    os.environ["PYSPARK_GATEWAY_PORT"] = os.environ["PYSPARK_GATEWAY_PORT"].decode("utf-8")
+if isinstance(os.environ.get("PYSPARK_GATEWAY_SECRET"), bytes):
+    os.environ["PYSPARK_GATEWAY_SECRET"] = os.environ["PYSPARK_GATEWAY_SECRET"].decode("utf-8")
 
 import dataiku
 from dataiku import spark as dkuspark
 from dataiku import recipe
-from pyspark.sql import functions as F, Window
+from pyspark.sql import functions as F
 
-# ----------------------- Helpers -----------------------
+# ------------------------------------------------------------------
+# Parameters (dataset names must match your Flow)
+# ------------------------------------------------------------------
+INPUT_DATASET  = "self_fuzzy_output"
+OUTPUT_DATASET = "Std_Party_Name_Lookup_Batch_Fin"
+
+# ------------------------------------------------------------------
+# Load input as Spark DF
+# Expected columns: party_name (string), party_name_std (string), ym_id (string/int)
+# ------------------------------------------------------------------
+spark = dkuspark.get_spark_session()
+in_ds = dataiku.Dataset(INPUT_DATASET)
+df = dkuspark.get_dataframe(spark, in_ds)
+
+# ------------------------------------------------------------------
+# Name standardizer
+# Goal: produce LOWERCASED, punctuation-light, abbreviation-expanded,
+#       number/noise stripped names while KEEPING company suffix 'inc.'
+# ------------------------------------------------------------------
 def standardize_name(col):
-    c = F.upper(F.coalesce(col, F.lit('')))
-    # Remove parentheses and punctuation; keep alnum + spaces
+    c = F.lower(F.coalesce(col, F.lit('')))
+
+    # remove parentheses content; normalize & -> ' and '
     c = F.regexp_replace(c, r'\((.*?)\)', ' ')
-    c = F.regexp_replace(c, r'&', ' AND ')
-    c = F.regexp_replace(c, r'[^A-Z0-9\s]', ' ')
-    # Common expansions
-    c = F.regexp_replace(c, r'\bSEC\b', ' SECURITIES ')
-    c = F.regexp_replace(c, r'\bUS\b', ' USA ')
-    c = F.regexp_replace(c, r'\bU\.?S\.?A\.?\b', ' USA ')
-    # Remove account-like / noise tokens + standalone numbers
-    c = F.regexp_replace(c, r'\b(ACCT|ACCOUNT|ACC|GLA|DDA|CHK|CK|NO|#)\s*\d+\b', ' ')
+    c = F.regexp_replace(c, r'&', ' and ')
+
+    # remove non-alphanumeric except spaces and dots (keep dot for 'inc.')
+    c = F.regexp_replace(c, r'[^a-z0-9\s\.]', ' ')
+
+    # expand common abbreviations
+    c = F.regexp_replace(c, r'\bsec\b', ' securities ')
+    c = F.regexp_replace(c, r'\bu\.?s\.?a\.?\b', ' usa ')
+    c = F.regexp_replace(c, r'\bu\.?s\.?\b', ' usa ')
+
+    # remove account-like / noise tokens (e.g., 'gla 111569', 'acct 123', etc.)
+    c = F.regexp_replace(c, r'\b(acct|account|acc|gla|dda|chk|ck|no|#)\s*\d+\b', ' ')
+    # drop standalone numeric tokens
     c = F.regexp_replace(c, r'\b\d+\b', ' ')
-    # Drop common legal suffixes
-    suffixes = [
-        'INCORPORATED','INC','CORPORATION','CORP','CO','COMPANY','LLC','L L C',
-        'LTD','LIMITED','LLP','L L P','LP','L P','PLC','S A','S A S','NV','N V',
-        'BV','B V','BVBA','B V B A','GMBH','AG','SPA','S P A'
-    ]
-    pattern_suffix = r'\b(' + '|'.join(suffixes) + r')\b'
-    c = F.regexp_replace(c, pattern_suffix, ' ')
-    # Normalize BANK variants lightly (optional; comment out if you prefer to keep as-is)
-    # c = F.regexp_replace(c, r'\bBK\b', ' BANK ')
-    # Whitespace normalize
+
+    # normalize common company suffix spellings to keep 'inc.' (NOT removing it)
+    # - any 'inc' / 'inc.' -> 'inc.' (single form)
+    c = F.regexp_replace(c, r'\binc\b\.?', ' inc. ')
+    # collapse duplicated suffixes like 'inc inc.' -> 'inc.'
+    c = F.regexp_replace(c, r'(inc\.)\s+(inc\.)', r'\1')
+
+    # prevent accidental removal of meaningful finance words (bank, securities, n.a., etc.)
+    # normalize 'n.a.' variants if present
+    c = F.regexp_replace(c, r'\bn\.?\s*a\.?\b', ' n.a. ')
+
+    # collapse whitespace
     c = F.regexp_replace(c, r'\s+', ' ')
     c = F.trim(c)
+
+    # final touch: if endswith 'inc' without period, add '.'
+    c = F.when(F.rlike(c, r'.*\binc$'), F.concat_ws('', c, F.lit('.'))).otherwise(c)
+
     return c
 
-# ----------------------- Read input -----------------------
-in_ds = dataiku.Dataset("self_fuzzy_output")
-spark = dkuspark.get_spark_session()
-df_in = dkuspark.get_dataframe(spark, in_ds)
-
-# Ensure required columns exist
-required_cols = {"party_name", "party_name_std", "ym_id"}
-missing = required_cols - set(df_in.columns)
-if missing:
-    raise ValueError("Input dataset 'self_fuzzy_output' missing columns: {}".format(", ".join(sorted(missing))))
-
-# ----------------------- Standardize -----------------------
-# Clean the raw party_name and the fuzzy output party_name_std
-df = (
-    df_in
-    .withColumn("party_name_clean", standardize_name(F.col("party_name")))
-    .withColumn("party_std_clean_from_fuzzy", standardize_name(F.col("party_name_std")))
-)
-
-# If fuzzy output was blank or useless, fallback to standardized raw
-# (i.e., ensure we always have some canonical candidate)
-df = df.withColumn(
-    "std_candidate",
-    F.when(F.length(F.col("party_std_clean_from_fuzzy")) > 0, F.col("party_std_clean_from_fuzzy"))
-     .otherwise(F.col("party_name_clean"))
-)
-
-# Optionally: drop very short tokens (e.g., single letters) that slipped through
-# df = df.withColumn("std_candidate", F.regexp_replace(F.col("std_candidate"), r'\b[A-Z]\b', ''))
-# df = df.withColumn("std_candidate", F.trim(F.regexp_replace(F.col("std_candidate"), r'\s+', ' ')))
-
-# ----------------------- Conflict resolution (majority vote per ym_id + party) -----------------------
-# There can be multiple std_candidate values for the same (ym_id, party_name_clean).
-# We'll pick the most frequent mapping within that ym bucket.
-
-counts = (
-    df.groupBy("ym_id", "party_name_clean", "std_candidate")
-      .count()
-)
-
-w = Window.partitionBy("ym_id", "party_name_clean").orderBy(F.desc("count"), F.asc("std_candidate"))
-resolved = (
-    counts
-    .withColumn("rn", F.row_number().over(w))
-    .where(F.col("rn") == 1)
+# ------------------------------------------------------------------
+# Build output
+# - Keep party_name and ym_id exactly as-is
+# - Overwrite party_name_std = standardize_name(party_name)
+# ------------------------------------------------------------------
+df_out = (df
+    .withColumn("party_name_std", standardize_name(F.col("party_name")))
     .select(
-        "ym_id",
-        F.col("party_name_clean").alias("party_name"),
-        F.col("std_candidate").alias("party_name_std")
+        F.col("party_name"),
+        F.col("party_name_std"),
+        F.col("ym_id")
     )
 )
 
-# Remove empty/NULL standards and duplicates
-resolved = (resolved
-            .where(F.length(F.col("party_name_std")) > 0)
-            .dropDuplicates(["ym_id", "party_name", "party_name_std"])
-)
-
-# ----------------------- (Optional) Overrides -----------------------
-# If you maintain a small override table (e.g., managed dataset "party_name_overrides"
-# with columns: party_name_std (dirty) , party_name_canonical (clean)),
-# you can enforce those mappings here. Uncomment if you have such a dataset.
-
-# try:
-#     overrides_ds = dataiku.Dataset("party_name_overrides")
-#     df_over = dkuspark.get_dataframe(spark, overrides_ds)
-#     # standardize the key to match our standardized domain
-#     df_over = (df_over
-#         .withColumn("party_name_std", standardize_name(F.col("party_name_std")))
-#         .withColumn("party_name_canonical", standardize_name(F.col("party_name_canonical")))
-#         .select("party_name_std", "party_name_canonical")
-#     )
-#     resolved = (resolved
-#         .join(df_over, on="party_name_std", how="left")
-#         .withColumn("party_name_std",
-#                     F.coalesce(F.col("party_name_canonical"), F.col("party_name_std")))
-#         .drop("party_name_canonical")
-#     )
-# except Exception as e:
-#     # If override dataset doesn't exist, just continue
-#     pass
-
-# ----------------------- Write output -----------------------
-out_ds = dataiku.Dataset("Std_Party_Name_Lookup_Batch_Fin")
-dkuspark.write_with_schema(out_ds, resolved.select("party_name", "party_name_std", "ym_id"))
+# ------------------------------------------------------------------
+# Write to output dataset (create/propagate schema)
+# ------------------------------------------------------------------
+out_ds = dataiku.Dataset(OUTPUT_DATASET)
+dkuspark.write_with_schema(out_ds, df_out)
