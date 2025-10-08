@@ -39,3 +39,24 @@ Action:
 Build a UI table that captures and displays the nodes and relationships for the currently expanded client context.
 
 The table should update interactively as users expand or collapse nodes in the visualization.
+
+
+3. UI Enhancement – Context Data Table
+
+Discussion:
+
+Proposed adding a table in the web app UI to display the expanded context data for each client.
+
+This will help visualize and analyze the nodes and relationships captured during graph expansion.
+
+Action Plan:
+
+Create a UI table component that dynamically populates based on the currently expanded client context.
+
+The table should list:
+
+Node details (Client, Account Product, Payment Product, FI, Prospect)
+
+Relationship details between them
+
+The table data should update automatically each time the graph expands in context.
