@@ -1,32 +1,25 @@
+During our standardization of party names for the USA Transactions data for January 2025, we used the NSCB Universe Customer Lookup data from sbx_nacb_arm_common_data.
 
-NACB Data Quality Issue – Duplicate Names with Different UENs (No Parent Connection)
-Hi [Source Team / Team Member’s Name],
-
-I hope you’re doing well.
-
-During our recent NACB data validation review, I observed that some parties share the same name but have different UENs, and these UENs do not appear to be connected to a common parent. Based on our internal review, these records seem to be unrelated entities that may have been incorrectly mapped under the same party name.
+While reviewing this data, I observed that some parties share the same name but have different UENs, and these UENs do not appear to be connected to a common parent.
+Based on our internal review, these records seem to represent unrelated entities that may have been incorrectly mapped under the same party name.
 
 Below are a few examples for your reference:
 
+Party Name	UEN 1	UEN 2	Remarks
+[Example Name 1]	[UEN_12345]	[UEN_67890]	No shared/connected parent
+[Example Name 2]	[UEN_54321]	[UEN_98765]	Appears as separate entities
+[Example Name 3]	[UEN_11223]	[UEN_44556]	Same name but different linkage
+
 Could you please review these cases and confirm whether:
 
-These parties should indeed have distinct UENs (as separate entities), or
+These parties should indeed have distinct UENs (i.e., represent separate entities).
 
-If this is a data alignment issue that needs to be corrected in the NACB source.
+Please let me know if you need any additional context, such as related transaction data or other supporting details, to assist in the validation.
 
-Please let me know if you need the full list of such records or any additional context (like transaction data or parent hierarchy) to support the validation.
+Thank you for your help in reviewing this data issue.
 
-Thank you for your help in resolving this issue.
-
-
-
-| **Party Name**   | **UEN 1**   | **UEN 2**   | **Remarks**                     |
-| ---------------- | ----------- | ----------- | ------------------------------- |
-| [Example Name 1] | [UEN_12345] | [UEN_67890] | No shared/connected parent      |
-| [Example Name 2] | [UEN_54321] | [UEN_98765] | Appears as separate entities    |
-| [Example Name 3] | [UEN_11223] | [UEN_44556] | Same name but different linkage |
-
-
+Best regards,
+Ganesh Reddy Mannem
 
 
 
