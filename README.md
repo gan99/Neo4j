@@ -1,3 +1,32 @@
+Hi [Source Team / Team Member’s Name],
+
+I hope you’re doing well.
+
+During our recent NACB data validation review, I observed that some parties share the same name but have different UENs, and these UENs do not appear to be connected to a common parent. Based on our internal review, these records seem to be unrelated entities that may have been incorrectly mapped under the same party name.
+
+Below are a few examples for your reference:
+
+Could you please review these cases and confirm whether:
+
+These parties should indeed have distinct UENs (as separate entities), or
+
+If this is a data alignment issue that needs to be corrected in the NACB source.
+
+Please let me know if you need the full list of such records or any additional context (like transaction data or parent hierarchy) to support the validation.
+
+Thank you for your help in resolving this issue.
+
+
+
+
+
+
+
+
+
+
+
+
 Subject: Meeting Minutes & Action Plan – NACB UEN Review and UI Enhancement
 
 Hi Team,
