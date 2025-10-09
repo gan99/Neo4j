@@ -18,6 +18,11 @@ Thank you for your help in resolving this issue.
 
 
 
+| **Party Name**   | **UEN 1**   | **UEN 2**   | **Remarks**                     |
+| ---------------- | ----------- | ----------- | ------------------------------- |
+| [Example Name 1] | [UEN_12345] | [UEN_67890] | No shared/connected parent      |
+| [Example Name 2] | [UEN_54321] | [UEN_98765] | Appears as separate entities    |
+| [Example Name 3] | [UEN_11223] | [UEN_44556] | Same name but different linkage |
 
 
 
