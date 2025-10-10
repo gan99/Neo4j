@@ -1,25 +1,40 @@
-During our standardization of party names for the USA Transactions data for January 2025, we used the NSCB Universe Customer Lookup data from sbx_nacb_arm_common_data.
+Hi Gordon,
 
-While reviewing this data, I observed that some parties share the same name but have different UENs, and these UENs do not appear to be connected to a common parent.
-Based on our internal review, these records seem to represent unrelated entities that may have been incorrectly mapped under the same party name.
+Thanks for the follow-up on the duplicate entities and the APMS deduplication work—appreciate the context and the audit example.
 
-Below are a few examples for your reference:
+I have a separate data-gap item to flag:
 
-Party Name	UEN 1	UEN 2	Remarks
-[Example Name 1]	[UEN_12345]	[UEN_67890]	No shared/connected parent
-[Example Name 2]	[UEN_54321]	[UEN_98765]	Appears as separate entities
-[Example Name 3]	[UEN_11223]	[UEN_44556]	Same name but different linkage
+Issue: Missing Clients in NACB Reports (UEN Mapping Impact)
 
-Could you please review these cases and confirm whether:
+While standardizing party names for USA Transactions – January 2025, I observed that some BMO clients with active transactions in Jan 2025 are missing from the NACB universe customer database (NSCB lookup from sbx_nacb_arm_common_data). I also checked December 2024 reports for these clients, and they are not listed there either.
 
-These parties should indeed have distinct UENs (i.e., represent separate entities).
+This gap impacts our ability to map UENs and maintain consistent party linkage in the graph.
 
-Please let me know if you need any additional context, such as related transaction data or other supporting details, to assist in the validation.
+Request
 
-Thank you for your help in reviewing this data issue.
+Could you please review these cases and confirm:
 
-Best regards,
-Ganesh Reddy Mannem
+Whether these clients should be present in the Jan 2025 NACB universe (and Dec 2024 for backfill), and
+
+If so, whether they can be added/backfilled or flagged for the ongoing remediation.
+
+Sample Cases (for reference)
+
+(I can send the full list as an attachment.)
+
+Client Name	Party ID	Evidence of Activity (Jan 2025)	Checked in NACB (Jan 2025)	Checked in NACB (Dec 2024)	Notes
+[Client A]	[Party_ID_A]	Txns: [count]/$[amount]	Not found	Not found	Needs UEN mapping
+[Client B]	[Party_ID_B]	Txns: [count]/$[amount]	Not found	Not found	Needs UEN mapping
+
+If helpful, I can provide:
+
+The transaction extracts (client, party_id, txn counts/amounts, dates, rails) that show Jan 2025 activity, and
+
+The lookup queries used against sbx_nacb_arm_common_data for Jan 2025 and Dec 2024.
+
+Please let me know if there’s a preferred template or additional fields you’d like me to include (e.g., LEI, UEN placeholder, account product, region).
+
+Thanks again—happy to walk through the examples live if useful.
 
 
 
