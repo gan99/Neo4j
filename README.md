@@ -1,3 +1,40 @@
+Hi [Manager’s Name],
+
+I wanted to get your input regarding the missing clients observed in the NACB Universe Customer data during our standardization checks for USA Transactions – January 2025.
+
+While performing the validation, I found that some BMO clients with active transactions in Jan 2025 are not listed in the NACB universe lookup data (sbx_nacb_arm_common_data) for both January and December reports.
+
+The source team confirmed that these clients fall under non-commercial lines, which is why they are not part of the NACB universe.
+
+Before I proceed with the data cleanup and standardization, I’d like your guidance on a few points:
+
+Should we exclude non-commercial clients (that are not part of the NACB universe) from our transaction dataset used for UEN mapping and standardization?
+
+If yes, would you prefer that I
+
+Filter them out directly in the Dataiku pipeline, or
+
+Keep them in a separate exception dataset for tracking/reporting?
+
+Would we want to notify or tag these clients somewhere (e.g., flag as non-commercial / not part of NACB) for documentation or downstream reference?
+
+Once I have your direction, I’ll proceed with updating the pipeline logic and prepare a short note summarizing how these exceptions are handled going forward.
+
+Best regards,
+Ganesh Reddy Mannem
+
+
+
+
+
+
+
+
+
+
+
+
+
 Hi Gordon,
 
 Thanks for the follow-up on the duplicate entities and the APMS deduplication work—appreciate the context and the audit example.
