@@ -1,3 +1,40 @@
+1. NACB Data Quality Checks
+
+a. Duplicate Party Names with Different UENs
+
+Reached out to the source team regarding duplicate party names with different UENs observed during standardization.
+
+Gordon from the source team confirmed this is a known issue in APMS, where duplicate entities are linked through the risk rating process.
+
+The team is currently working on deduplication, and these changes are expected to be reflected in upcoming NACB reports once the APMS fixes take effect.
+
+b. Missing Clients in NACB Universe Customer Data
+
+The source team confirmed that the missing clients I reported are non-commercial clients, which is why they are not part of the NACB universe.
+
+I’ve asked for confirmation from the manager on whether we can exclude these non-commercial clients from our transaction dataset going forward.
+
+2. Incoming vs Outgoing Data Flow Validation
+
+I analyzed the mismatch between incoming and outgoing transaction flows compared to client totals.
+
+Found that the Financial Institution (FI) pipeline was not completing, which caused the mismatch.
+
+I reran the FI pipeline, re-ingested the corrected data into the Neo4j database, and the mismatch issue has been resolved.
+
+I’m now performing validation checks to ensure that all flow totals align with client-level aggregates.
+
+2. Incoming vs Outgoing Data Flow Validation
+
+Analyzed the mismatch between incoming and outgoing transaction flows compared to client totals.
+
+Found that the Financial Institution (FI) pipeline was not completing successfully, which appeared to be causing the mismatch.
+
+After re-running the FI pipeline and re-ingesting the data into the Neo4j database, the mismatch issue still persists.
+
+I am currently investigating further and performing detailed validation checks to identify the root cause and confirm data consistency across pipelines.
+
+
 Hi [Manager’s Name],
 
 I wanted to get your input regarding the missing clients observed in the NACB Universe Customer data during our standardization checks for USA Transactions – January 2025.
