@@ -1,3 +1,21 @@
+Hi Arjun,
+
+Thank you for sharing the details.
+
+We are working to get the dataset ready by tomorrow EOD. Our analysis focuses on identifying any relationships beyond the Diners (DINUS) Corporate Cards from our transaction data.
+
+I’ve already been able to retrieve some of these relationships, and for the remaining clients, I’m checking the previous transaction data to ensure full coverage.
+
+Additionally, I noticed that we can directly retrieve the NAICS code and NAICS name from the NACB customer table in AIM, which should help in providing the industry-level details you requested.
+
+I’ll share the consolidated dataset and summary of findings once the validation is complete.
+
+Best regards,
+Ganesh Reddy Mannem
+Data Scientist – B2B Graph Network
+BMO Bank
+
+
 1. NACB Data Quality Checks
 
 a. Duplicate Party Names with Different UENs
