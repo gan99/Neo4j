@@ -1,3 +1,16 @@
+Please find attached the Diners Club (U.S.) client report. For each client UEN, the file includes:
+
+Demographics: Industry number (NAICS Code), Industry name (NAICS Name), and Total Annual Sales
+
+Transactions (Jan 2025): Totals by transaction type (amount and volume) derived from the January 2025 transaction data
+
+I’d appreciate a quick discussion to walk through the findings and next steps.
+Could you share your availability for a brief call this week? I’ll send an invite accordingly.
+
+Thanks,
+Ganesh Reddy Mannem
+
+
 While working on retrieving and processing the transaction data for the 100 clients, we’re currently facing some performance issues within Dataiku.
 
 Even simple recipes (like the copy recipe) are taking much longer than expected to execute and, in some cases, are still running without completion. We reached out to the Dataiku support team, and they identified that the issue is likely due to the Hadoop cluster being at full capacity, as it’s currently serving multiple high-load jobs.
