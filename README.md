@@ -1,3 +1,15 @@
+
+We are working to get the dataset ready by tomorrow EOD. Our analysis focuses on identifying any relationships beyond the Diners (DINUS) Corporate Cards from our transaction data.
+
+I’ve already retrieved some relationships, and for the remaining clients, I’m checking the previous transaction data to ensure full coverage.
+However, I’ve encountered a barrier on the U.S. side — currently, we only have the January 2025 transaction data available. From that, we were able to match 14 records out of the 100 U.S. clients provided.
+
+To match the remaining clients, we’ll need access to the previous year’s U.S. transaction data, as many of these relationships are likely reflected in earlier periods. At this point, we do not yet have access to that data, so I’ll need some additional time once it becomes available to complete the analysis.
+
+Additionally, I observed that we can directly retrieve the NAICS code and NAICS name from the NACB customer table in AIM, which will help us include industry-level details in the final dataset.
+
+I’ll share the consolidated results and summary as soon as we complete the validation and have the additional U.S. data.
+
 Hi Arjun,
 
 Thank you for sharing the details.
