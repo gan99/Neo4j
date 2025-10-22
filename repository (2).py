@@ -1,34 +1,21 @@
-WITH src AS (
-  SELECT
-    TRIM(legal_name) AS legal_name,
-    TRIM(uen)        AS uen
-  FROM UEN_Legal_Dataset
-  WHERE legal_name IS NOT NULL AND legal_name <> ''
-),
-
--- Extract the first numeric sequence we can compare on (e.g., 'AB1234Z' -> 1234)
-with_num AS (
-  SELECT
-    legal_name,
-    uen,
-    CAST(REGEXP_EXTRACT(uen, '(\\d+)', 0) AS BIGINT) AS uen_num
-  FROM src
-),
-
--- Rank rows per legal_name by numeric UEN desc, then by raw UEN desc as tie-breaker
-ranked AS (
-  SELECT
-    legal_name,
-    uen,
-    ROW_NUMBER() OVER (
-      PARTITION BY legal_name
-      ORDER BY uen_num DESC NULLS LAST, uen DESC
-    ) AS rn
-  FROM with_num
-)
-
 SELECT
-  legal_name,
-  uen  -- this is the "highest" UEN for the legal name
-FROM ranked
-WHERE rn = 1;
+    a.party_id,
+    CASE 
+        WHEN a.account_number = b.account_number 
+             AND b.account_product_id IS NOT NULL 
+        THEN b.account_product_id
+        ELSE 'Other'
+    END AS account_product_id,
+    SUM(a.pmt_amt) AS total_amount,
+    COUNT(*) AS total_volume
+FROM graphnetwork_oneclientview_us_v10_1_view2_transaction_account a
+LEFT JOIN graphnetwork_oneclientview_us_v10_1_view2_account_account_product b
+    ON a.account_number = b.account_number
+WHERE b.acct_src_stm_cd IS NOT NULL OR b.acct_src_stm_cd IS NULL  -- allows all
+GROUP BY a.party_id,
+         CASE 
+             WHEN a.account_number = b.account_number 
+                  AND b.account_product_id IS NOT NULL 
+             THEN b.account_product_id
+             ELSE 'Other'
+         END
