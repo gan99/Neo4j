@@ -1,4 +1,12 @@
+While working on retrieving and processing the transaction data for the 100 clients, we’re currently facing some performance issues within Dataiku.
 
+Even simple recipes (like the copy recipe) are taking much longer than expected to execute and, in some cases, are still running without completion. We reached out to the Dataiku support team, and they identified that the issue is likely due to the Hadoop cluster being at full capacity, as it’s currently serving multiple high-load jobs.
+
+The support team advised us to try again after some time once the cluster load decreases.
+
+Once the issue is resolved, I will proceed with completing the recipe execution and generate the updated transaction file with all the processed data obtained so far.
+
+I’ll share another update once the dataset is refreshed and ready for analysis.
 We are working to get the dataset ready by tomorrow EOD. Our analysis focuses on identifying any relationships beyond the Diners (DINUS) Corporate Cards from our transaction data.
 
 I’ve already retrieved some relationships, and for the remaining clients, I’m checking the previous transaction data to ensure full coverage.
