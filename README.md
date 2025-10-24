@@ -1,3 +1,36 @@
+Hi Team,
+
+Please find attached the updated report for the U.S. Diners Club clients.
+
+As mentioned earlier by Thibault, the demographic details for the U.S. clients are already included. In addition to that, I’ve provided:
+
+Transaction details for U.S. clients, including:
+
+Payment products used
+
+Total transaction volume
+
+Total transaction amount for each transaction type
+
+The next sheet includes details of Deposit and Lending products, which contain:
+
+Account number
+
+Source system code
+
+Product name
+
+Month-end balance with date
+
+Original authorization amount
+
+Please review the attached file, and let me know if you’d like to discuss or need any specific breakdowns.
+
+Best regards,
+Ganesh Reddy Mannem
+Data Scientist – B2B Graph Network
+BMO Bank
+
 Please find attached the Diners Club (U.S.) client report. For each client UEN, the file includes:
 
 Demographics: Industry number (NAICS Code), Industry name (NAICS Name), and Total Annual Sales
