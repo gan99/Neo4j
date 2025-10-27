@@ -1,3 +1,38 @@
+SELECT
+    a.client_id,
+    a.client_name,
+    CASE
+        WHEN a.account_number = b.account_number OR a.uen = b.uen THEN b.account_product_id
+        ELSE 'Other'
+    END AS account_product_id,
+    a.flow,
+    a.txn_channel,
+    a.payment_product_nm,
+    a.prospect_fi_id,
+    a.prospect_id,
+    a.prospect_name,
+    SUM(a.pmt_amt) AS total_amount,
+    COUNT(*) AS total_volume
+FROM graphnetwork_oneclientview_us_v10_1_sample a
+LEFT JOIN graphnetwork_oneclientview_us_v10_1_nacb_acc_uen b
+    ON (a.account_number = b.account_number OR a.uen = b.uen)
+WHERE b.account_number IS NOT NULL OR b.uen IS NOT NULL
+GROUP BY
+    a.client_id,
+    a.client_name,
+    CASE
+        WHEN a.account_number = b.account_number OR a.uen = b.uen THEN b.account_product_id
+        ELSE 'Other'
+    END,
+    a.flow,
+    a.txn_channel,
+    a.payment_product_nm,
+    a.prospect_fi_id,
+    a.prospect_id,
+    a.prospect_name
+
+
+
 Hi Team,
 
 Please find attached the updated report for the U.S. Diners Club clients.
