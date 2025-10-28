@@ -1,5 +1,63 @@
+1. duplicate aggregates
+MATCH (agg:AggTx)
+WITH agg.monthId AS month, agg.client_id AS client,
+     agg.account_product_id AS acct, agg.payment_product_nm AS pay,
+     agg.flow AS flow, agg.txn_channel AS ch, agg.prospect_fi_id AS fi,
+     agg.prospect_id AS p, count(*) AS cnt
+WHERE cnt > 1
+RETURN month, client, acct, pay, flow, ch, fi, p, cnt
+ORDER BY cnt DESC;
+
+2. missing totalAmount or txCount
+MATCH (agg:AggTx)
+WHERE agg.totalAmount IS NULL OR agg.txCount IS NULL
+RETURN count(*) AS missingMetrics;
+
+3. Prospect-level aggregation
+MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_PROSPECT]->(p:Prospect)
+RETURN c.name AS Client, p.name AS Prospect,
+       sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+ORDER BY Client, totalAmount DESC;
+
+4. FI
+MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_FI]->(fi:FinancialInstitution)
+RETURN c.name AS Client, fi.name AS FI,
+       sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+ORDER BY Client, totalAmount DESC;
+
+5.PaymentProduct
+MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_PAYMENT_PRODUCT]->(pp:PaymentProduct)
+RETURN c.name AS Client, pp.name AS PaymentProduct,
+       sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+ORDER BY Client, totalAmount DESC;
+
+6. client total amount and txnCount
+SELECT client_name, SUM(total_amount) AS totalAmount_raw, SUM(total_volume) AS txCount_raw
+FROM graphnetwork_oneclientview_us_v10_1_sample
+GROUP BY client_name
+
+MATCH (agg:AggTx)-[:FOR_CLIENT]->(c:Client)
+RETURN c.name AS Client,
+       round(sum(agg.totalAmount), 2) AS totalAmount_graph,
+       sum(agg.txCount) AS txCount_graph
+ORDER BY totalAmount_graph DESC;
+
+
+
+
+
+
+
+
+
+
+
+
 -- Step 1: Replace FI_NAME only for ZELLE transactions
-WITH zelle_updated AS (
+WITH z
+
+
+elle_updated AS (
     SELECT
         t.*,
         COALESCE(b.FINAME, t.FINANCIAL_INSTITUTION_NAME) AS UPDATED_FINAME
