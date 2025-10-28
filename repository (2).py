@@ -1,172 +1,227 @@
-1. duplicate aggregates
-MATCH (agg:AggTx)
-WITH agg.monthId AS month, agg.client_id AS client,
-     agg.account_product_id AS acct, agg.payment_product_nm AS pay,
-     agg.flow AS flow, agg.txn_channel AS ch, agg.prospect_fi_id AS fi,
-     agg.prospect_id AS p, count(*) AS cnt
-WHERE cnt > 1
-RETURN month, client, acct, pay, flow, ch, fi, p, cnt
-ORDER BY cnt DESC;
 
-2. missing totalAmount or txCount
-MATCH (agg:AggTx)
-WHERE agg.totalAmount IS NULL OR agg.txCount IS NULL
-RETURN count(*) AS missingMetrics;
+Client	DepProduct	Flow	Channel	PayProduct	FI	Prospect	totalAmount	txCount
+Client A	CA	Sent	OLBB	Wire	Chase	Prospect X	10,000	5
+Client A	CA	Sent	OLBB	Wire	Wells Fargo	Prospect Y	5,000	2
+Client A	CA	Sent	OLBB	EFT	Chase	Prospect X	3,000	3
+Client A	CA	Received	ABM	Cheque	Chase	Prospect X	2,000	1
+Client A	BPRA	Sent	OLBB	Wire	Chase	Prospect Y	8,000	4
+Client B	CA	Sent	ABM	EFT	Wells Fargo	Prospect Z	4,000	2
+Now, your ETL script must "roll up" this data into 6 more tables.
 
-3. Prospect-level aggregation
-MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_PROSPECT]->(p:Prospect)
-RETURN c.name AS Client, p.name AS Prospect,
-       sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
-ORDER BY Client, totalAmount DESC;
+Sample Rolled-Up Data (Tables L0 - L5)
+Table L5: Group by first 6 dimensions (e.g., Client A, CA, Sent, OLBB, Wire, Chase -> 10,000, 5) (e.g., Client A, CA, Sent, OLBB, Wire, Wells Fargo -> 5,000, 2) ...and so on.
 
-4. FI
-MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_FI]->(fi:FinancialInstitution)
-RETURN c.name AS Client, fi.name AS FI,
-       sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
-ORDER BY Client, totalAmount DESC;
+Table L4: Group by first 5 dimensions | Client | DepProduct | Flow | Channel | PayProduct | totalAmount | txCount | | :--- | :--- | :--- | :--- | :--- | :--- | :--- | | Client A | CA | Sent | OLBB | Wire | 15,000 | 7 | | Client A | CA | Sent | OLBB | EFT | 3,000 | 3 | | Client A | CA | Received | ABM | Cheque | 2,000 | 1 | | Client A | BPRA | Sent | OLBB | Wire | 8,000 | 4 | | Client B | CA | Sent | ABM | EFT | 4,000 | 2 |
 
-5.PaymentProduct
-MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_PAYMENT_PRODUCT]->(pp:PaymentProduct)
-RETURN c.name AS Client, pp.name AS PaymentProduct,
-       sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
-ORDER BY Client, totalAmount DESC;
+Table L3: Group by first 4 dimensions | Client | DepProduct | Flow | Channel | totalAmount | txCount | | :--- | :--- | :--- | :--- | :--- | :--- | | Client A | CA | Sent | OLBB | 18,000 | 10 | | Client A | CA | Received | ABM | 2,000 | 1 | | Client A | BPRA | Sent | OLBB | 8,000 | 4 | | Client B | CA | Sent | ABM | 4,000 | 2 |
 
-6. client total amount and txnCount
-SELECT client_name, SUM(total_amount) AS totalAmount_raw, SUM(total_volume) AS txCount_raw
-FROM graphnetwork_oneclientview_us_v10_1_sample
-GROUP BY client_name
+Table L2: Group by first 3 dimensions | Client | DepProduct | Flow | totalAmount | txCount | | :--- | :--- | :--- | :--- | :--- | | Client A | CA | Sent | 18,000 | 10 | | Client A | CA | Received | 2,000 | 1 | | Client A | BPRA | Sent | 8,000 | 4 | | Client B | CA | Sent | 4,000 | 2 |
 
-MATCH (agg:AggTx)-[:FOR_CLIENT]->(c:Client)
-RETURN c.name AS Client,
-       round(sum(agg.totalAmount), 2) AS totalAmount_graph,
-       sum(agg.txCount) AS txCount_graph
-ORDER BY totalAmount_graph DESC;
+Table L1: Group by first 2 dimensions | Client | DepProduct | totalAmount | txCount | | :--- | :--- | :--- | :--- | | Client A | CA | 20,000 | 11 | | Client A | BPRA | 8,000 | 4 | | Client B | CA | 4,000 | 2 |
+
+Table L0: Group by Client (The Root) | Client | totalAmount | txCount | | :--- | :--- | :--- | | Client A | 28,000 | 15 | | Client B | 4,000 | 2 |
 
 
 
+On Wed, Oct 22, 2025 at 12:22 PM Sundar Narisetti <sundar.narisetti@gmail.com> wrote:
+  Step 1: ETL Pre-Aggregation  
+
+You must use your source data to create a set of "rolled-up" tables, one for each level of the hierarchy.
+
+Table L6 (Leaf): Group by Client, DepProduct, Flow, Channel, PayProduct, FI, Prospect.
+
+(e.g., Client A, CA, Sent, OLBB, Wire, Chase, Prospect X, 10000, 5)
+
+Table L5: Group by the first 6 dimensions.
+
+Table L4: Group by the first 5 dimensions.
+
+Table L3: Group by the first 4 dimensions.
+
+Table L2: Group by the first 3 dimensions.
+
+Table L1: Group by Client, DepProduct.
+
+Table L0: Group by Client only.
 
 
 
+  Step 2: Define the use case Graph Schema  
+
+This is where your use case graph is implemented.
+
+Dimension Nodes:
+
+(:Client {clientId: string, name: string})
+
+(:Prospect {prospectId: string, name: string})
+
+(:DepositProduct {name: string})
+
+(:Flow {direction: string})
+
+(:Channel {name: string})
+
+(:PaymentProduct {name: string})
+
+(:FinancialInstitution {name: string})
+
+Aggregation Nodes:
+
+(:ClientSummary {totalAmount: float, txCount: int}) (Level 0 Root)
+
+(:AggSummary {level: int, totalAmount: float, txCount: int}) (Levels 1-6)
+
+Relationships:
+
+[:HAS_TOTAL_SUMMARY] (Client -> ClientSummary)
+
+[:DRILLDOWN_TO] (ClientSummary -> AggSummary, AggSummary -> AggSummary)
+
+[:FOR_DEPOSIT_PRODUCT] (AggSummary L1 -> DepositProduct)
+
+[:FOR_FLOW] (AggSummary L2 -> Flow)
+
+[:FOR_CHANNEL] (AggSummary L3 -> Channel)
+
+[:FOR_PAYMENT_PRODUCT] (AggSummary L4 -> PaymentProduct)
+
+[:FOR_FI] (AggSummary L5 -> FinancialInstitution)
+
+[:FOR_PROSPECT] (AggSummary L6 -> Prospect)
+
+
+  Step 3: Create the Graph
+
+   You'll load these in order, from dimensions to the root (L0) down to the leaves (L6).
+
+  A. Create all Dimension Nodes
+
+  Load all your unique dimension values first.
+
+// Load Clients
+MERGE (:Client {clientId: 'ClientA', name: 'Client A'});
+MERGE (:Client {clientId: 'ClientB', name: 'Client B'});
+
+// Load Prospects
+MERGE (:Prospect {prospectId: 'ProspectX', name: 'Prospect X'});
+MERGE (:Prospect {prospectId: 'ProspectY', name: 'Prospect Y'});
+MERGE (:Prospect {prospectId: 'ProspectZ', name: 'Prospect Z'});
+
+// Load other dimensions
+MERGE (:DepositProduct {name: 'CA'});
+MERGE (:DepositProduct {name: 'BPRA'});
+MERGE (:Flow {direction: 'Sent'});
+MERGE (:Flow {direction: 'Received'});
+MERGE (:Channel {name: 'OLBB'});
+MERGE (:Channel {name: 'ABM'});
+MERGE (:PaymentProduct {name: 'Wire'});
+MERGE (:PaymentProduct {name: 'EFT'});
+MERGE (:FinancialInstitution {name: 'Chase'});
+MERGE (:FinancialInstitution {name: 'Wells Fargo'});
+
+  B. Load Level 0 (from Table L0)
+  This creates the starting point for each client.
+
+// Load (Client A, 28000, 15)
+MATCH (c:Client {clientId: 'ClientA'})
+CREATE (c)-[:HAS_TOTAL_SUMMARY]->(cs:ClientSummary {totalAmount: 28000, txCount: 15});
+
+  C. Load Level 1 (from Table L1)  
+This links the root summary to the first-level drill-down (Deposit Product).
+
+// Load (Client A, CA, 20000, 11)
+MATCH (c:Client {clientId: 'ClientA'})-[:HAS_TOTAL_SUMMARY]->(cs:ClientSummary)
+MATCH (dp:DepositProduct {name: 'CA'})
+CREATE (cs)-[:DRILLDOWN_TO]->(agg1:AggSummary {level: 1, totalAmount: 20000, txCount: 11})
+CREATE (agg1)-[:FOR_DEPOSIT_PRODUCT]->(dp);
+
+// Load (Client A, BPRA, 8000, 4)
+MATCH (c:Client {clientId: 'ClientA'})-[:HAS_TOTAL_SUMMARY]->(cs:ClientSummary)
+MATCH (dp:DepositProduct {name: 'BPRA'})
+CREATE (cs)-[:DRILLDOWN_TO]->(agg1:AggSummary {level: 1, totalAmount: 8000, txCount: 4})
+CREATE (agg1)-[:FOR_DEPOSIT_PRODUCT]->(dp);
 
 
 
+  D. Load Level 2 (from Table L2)
+
+  The pattern is: Match the parent, Create the child.
+
+  // Load (Client A, CA, Sent, 18000, 10)
+
+MATCH (c:Client {clientId: 'ClientA'})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (cs)-[:DRILLDOWN_TO]->(agg1:AggSummary {level: 1})-[:FOR_DEPOSIT_PRODUCT]->(dp:DepositProduct {name: 'CA'})
+MATCH (f:Flow {direction: 'Sent'})
+CREATE (agg1)-[:DRILLDOWN_TO]->(agg2:AggSummary {level: 2, totalAmount: 18000, txCount: 10})
+CREATE (agg2)-[:FOR_FLOW]->(f);
+
+E. Load Levels 3, 4, 5...
+You continue this pattern, making the MATCH path one level deeper each time. For example, loading L3 (Channel) would look like this:
+
+// Load (Client A, CA, Sent, OLBB, 18000, 10)
+MATCH (c:Client {clientId: 'ClientA'})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (cs)-[:DRILLDOWN_TO]->(agg1)-[:FOR_DEPOSIT_PRODUCT]->(dp:DepositProduct {name: 'CA'})
+MATCH (agg1)-[:DRILLDOWN_TO]->(agg2)-[:FOR_FLOW]->(f:Flow {direction: 'Sent'})
+MATCH (ch:Channel {name: 'OLBB'})
+CREATE (agg2)-[:DRILLDOWN_TO]->(agg3:AggSummary {level: 3, totalAmount: 18000, txCount: 10})
+CREATE (agg3)-[:FOR_CHANNEL]->(ch);
 
 
 
--- Step 1: Replace FI_NAME only for ZELLE transactions
-WITH z
+F. Load Level 6 (from Table L6)
+This is the final step, linking the last summary node to the (:Prospect).
 
-
-elle_updated AS (
-    SELECT
-        t.*,
-        COALESCE(b.FINAME, t.FINANCIAL_INSTITUTION_NAME) AS UPDATED_FINAME
-    FROM transaction_data t
-    LEFT JOIN bank_acronyms_to_bank_names b
-        ON t.FINANCIAL_INSTITUTION_NAME = b.BANK_CODE
-    WHERE UPPER(t.PAYMENT_TYPE) = 'ZELLE'
-)
-
--- Step 2: Combine all transactions together
-SELECT
-    t.TRANSACTION_ID,
-    t.PAYMENT_TYPE,
-    CASE
-        WHEN UPPER(t.PAYMENT_TYPE) = 'ZELLE'
-        THEN z.UPDATED_FINAME
-        ELSE t.FINANCIAL_INSTITUTION_NAME
-    END AS FINANCIAL_INSTITUTION_NAME,
-    t.CLIENT_ID,
-    t.ACCOUNT_NUMBER,
-    t.PAYMENT_PRODUCT,
-    t.AMOUNT,
-    t.TRANSACTION_DATE,
-    t.OTHER_COLUMNS
-FROM transaction_data t
-LEFT JOIN zelle_updated z
-    ON t.TRANSACTION_ID = z.TRANSACTION_ID
+// Load (Client A, CA, Sent, OLBB, Wire, Chase, Prospect X, 10000, 5)
+MATCH (c:Client {clientId: 'ClientA'})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (cs)-[:DRILLDOWN_TO]->(agg1)-[:FOR_DEPOSIT_PRODUCT]->(dp:DepositProduct {name: 'CA'})
+MATCH (agg1)-[:DRILLDOWN_TO]->(agg2)-[:FOR_FLOW]->(f:Flow {direction: 'Sent'})
+MATCH (agg2)-[:DRILLDOWN_TO]->(agg3)-[:FOR_CHANNEL]->(ch:Channel {name: 'OLBB'})
+MATCH (agg3)-[:DRILLDOWN_TO]->(agg4)-[:FOR_PAYMENT_PRODUCT]->(pp:PaymentProduct {name: 'Wire'})
+MATCH (agg4)-[:DRILLDOWN_TO]->(agg5)-[:FOR_FI]->(fi:FinancialInstitution {name: 'Chase'})
+MATCH (p:Prospect {prospectId: 'ProspectX'})
+CREATE (agg5)-[:DRILLDOWN_TO]->(agg6:AggSummary {level: 6, totalAmount: 10000, txCount: 5})
+CREATE (agg6)-[:FOR_PROSPECT]->(p);
 
 
 
-MERGE (agg:AggTx {
-  monthId:            item.month_id,
-  client_id:          item.client_id,
-  account_product_id: item.account_product_id,
-  payment_product_nm: item.payment_product_nm,
-  flow:               item.flow,
-  txn_channel:        item.txn_channel,
-  prospect_fi_id:     item.prospect_fi_id,
-  prospect_id:        item.prospect_id
-})
-// set/update metrics each run (idempotent)
-SET agg.totalAmount = toFloat(item.total_amount),
-    agg.txCount     = toInteger(item.total_volume)
+  Step 4: UI Query Logic
 
--- Match on account_number
-SELECT
-    a.client_id,
-    a.client_name,
-    b.account_product_id,
-    a.flow,
-    a.txn_channel,
-    a.payment_product_nm,
-    a.prospect_fi_id,
-    a.prospect_id,
-    a.prospect_name,
-    SUM(a.pmt_amt) AS total_amount,
-    COUNT(*) AS total_volume
-FROM graphnetwork_oneclientview_us_v10_1_sample a
-LEFT JOIN graphnetwork_oneclientview_us_v10_1_nacb_acc_uen b
-    ON a.account_number = b.account_number
-WHERE b.account_product_id IS NOT NULL
-GROUP BY
-    a.client_id, a.client_name, b.account_product_id,
-    a.flow, a.txn_channel, a.payment_product_nm,
-    a.prospect_fi_id, a.prospect_id, a.prospect_name
+  Your UI doesn't need to know what the next node is, just that it needs to follow the [:DRILLDOWN_TO] path.
 
-UNION ALL
+START: User clicks 'Client A'. The UI gets the id of its (:ClientSummary) node (e.g., id: 50).
 
--- Match on UEN (and not matched by account_number)
-SELECT
-    a.client_id,
-    a.client_name,
-    b.account_product_id,
-    a.flow,
-    a.txn_channel,
-    a.payment_product_nm,
-    a.prospect_fi_id,
-    a.prospect_id,
-    a.prospect_name,
-    SUM(a.pmt_amt) AS total_amount,
-    COUNT(*) AS total_volume
-FROM graphnetwork_oneclientview_us_v10_1_sample a
-LEFT JOIN graphnetwork_oneclientview_us_v10_1_nacb_acc_uen b
-    ON a.uen = b.uen
-WHERE b.account_product_id IS NOT NULL
-  AND a.account_number NOT IN (SELECT account_number FROM graphnetwork_oneclientview_us_v10_1_nacb_acc_uen)
-GROUP BY
-    a.client_id, a.client_name, b.account_product_id,
-    a.flow, a.txn_channel, a.payment_product_nm,
-    a.prospect_fi_id, a.prospect_id, a.prospect_name
+Query 1: Get Level 1 (Deposit Products) The UI passes id: 50 as $clickedSummaryId.
 
-UNION ALL
+MATCH (cs:ClientSummary)-[:DRILLDOWN_TO]->(agg1:AggSummary {level: 1})-[:FOR_DEPOSIT_PRODUCT]->(dp)
+WHERE id(cs) = $clickedSummaryId  
+RETURN
+    dp.name AS nodeLabel,
+    agg1.totalAmount AS total,
+    agg1.txCount AS count,
+    id(agg1) AS nodeIdToExpand // This ID is for the *next* click
 
--- Remaining unmatched → "Other"
-SELECT
-    a.client_id,
-    a.client_name,
-    'Other' AS account_product_id,
-    a.flow,
-    a.txn_channel,
-    a.payment_product_nm,
-    a.prospect_fi_id,
-    a.prospect_id,
-    a.prospect_name,
-    SUM(a.pmt_amt) AS total_amount,
-    COUNT(*) AS total_volume
-FROM graphnetwork_oneclientview_us_v10_1_sample a
-WHERE a.account_number NOT IN (SELECT account_number FROM graphnetwork_oneclientview_us_v10_1_nacb_acc_uen)
-  AND a.uen NOT IN (SELECT uen FROM graphnetwork_oneclientview_us_v10_1_nacb_acc_uen)
-GROUP BY
-    a.client_id, a.client_name, a.flow, a.txn_channel,
-    a.payment_product_nm, a.prospect_fi_id, a.prospect_id, a.prospect_name
+Result: (nodeLabel: 'CA', total: 20000, ..., nodeIdToExpand: 101)
+
+
+Query 2: User clicks the 'CA ($20k)' node The UI passes id: 101 as $clickedSummaryId.
+
+MATCH (agg1:AggSummary)-[:DRILLDOWN_TO]->(agg2:AggSummary {level: 2})-[:FOR_FLOW]->(f)
+WHERE id(agg1) = $clickedSummaryId
+RETURN
+    f.direction AS nodeLabel,
+    agg2.totalAmount AS total,
+    agg2.txCount AS count,
+    id(agg2) AS nodeIdToExpand
+
+Result: (nodeLabel: 'Sent', total: 18000, ..., nodeIdToExpand: 201)
+
+This pattern continues all the way down. The final query for Level 6 will simply be:
+
+MATCH (agg5:AggSummary)-[:DRILLDOWN_TO]->(agg6:AggSummary {level: 6})-[:FOR_PROSPECT]->(p)
+WHERE id(agg5) = $clickedSummaryId
+RETURN
+    p.name AS nodeLabel,
+    agg6.totalAmount AS total,
+    agg6.txCount AS count
+// No nodeIdToExpand is needed, as this is the last level
