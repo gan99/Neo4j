@@ -1,3 +1,17 @@
+MERGE (agg:AggTx {
+  monthId:            item.month_id,
+  client_id:          item.client_id,
+  account_product_id: item.account_product_id,
+  payment_product_nm: item.payment_product_nm,
+  flow:               item.flow,
+  txn_channel:        item.txn_channel,
+  prospect_fi_id:     item.prospect_fi_id,
+  prospect_id:        item.prospect_id
+})
+// set/update metrics each run (idempotent)
+SET agg.totalAmount = toFloat(item.total_amount),
+    agg.txCount     = toInteger(item.total_volume)
+
 -- Match on account_number
 SELECT
     a.client_id,
