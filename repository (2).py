@@ -1,3 +1,35 @@
+-- Step 1: Replace FI_NAME only for ZELLE transactions
+WITH zelle_updated AS (
+    SELECT
+        t.*,
+        COALESCE(b.FINAME, t.FINANCIAL_INSTITUTION_NAME) AS UPDATED_FINAME
+    FROM transaction_data t
+    LEFT JOIN bank_acronyms_to_bank_names b
+        ON t.FINANCIAL_INSTITUTION_NAME = b.BANK_CODE
+    WHERE UPPER(t.PAYMENT_TYPE) = 'ZELLE'
+)
+
+-- Step 2: Combine all transactions together
+SELECT
+    t.TRANSACTION_ID,
+    t.PAYMENT_TYPE,
+    CASE
+        WHEN UPPER(t.PAYMENT_TYPE) = 'ZELLE'
+        THEN z.UPDATED_FINAME
+        ELSE t.FINANCIAL_INSTITUTION_NAME
+    END AS FINANCIAL_INSTITUTION_NAME,
+    t.CLIENT_ID,
+    t.ACCOUNT_NUMBER,
+    t.PAYMENT_PRODUCT,
+    t.AMOUNT,
+    t.TRANSACTION_DATE,
+    t.OTHER_COLUMNS
+FROM transaction_data t
+LEFT JOIN zelle_updated z
+    ON t.TRANSACTION_ID = z.TRANSACTION_ID
+
+
+
 MERGE (agg:AggTx {
   monthId:            item.month_id,
   client_id:          item.client_id,
