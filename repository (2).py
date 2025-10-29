@@ -1,3 +1,68 @@
+-- L6 (leaf) – full detail
+CREATE OR REPLACE TABLE L6 AS
+SELECT Client, DepProduct, Flow, Channel, PayProduct, FI, Prospect,
+       SUM(totalAmount) AS totalAmount, SUM(txCount) AS txCount
+FROM transactions
+GROUP BY Client, DepProduct, Flow, Channel, PayProduct, FI, Prospect;
+
+-- L5
+CREATE OR REPLACE TABLE L5 AS
+SELECT Client, DepProduct, Flow, Channel, PayProduct, FI,
+       SUM(totalAmount) AS totalAmount, SUM(txCount) AS txCount
+FROM transactions
+GROUP BY Client, DepProduct, Flow, Channel, PayProduct, FI;
+
+-- L4
+CREATE OR REPLACE TABLE L4 AS
+SELECT Client, DepProduct, Flow, Channel, PayProduct,
+       SUM(totalAmount) AS totalAmount, SUM(txCount) AS txCount
+FROM transactions
+GROUP BY Client, DepProduct, Flow, Channel, PayProduct;
+
+-- L3
+CREATE OR REPLACE TABLE L3 AS
+SELECT Client, DepProduct, Flow, Channel,
+       SUM(totalAmount) AS totalAmount, SUM(txCount) AS txCount
+FROM transactions
+GROUP BY Client, DepProduct, Flow, Channel;
+
+-- L2
+CREATE OR REPLACE TABLE L2 AS
+SELECT Client, DepProduct, Flow,
+       SUM(totalAmount) AS totalAmount, SUM(txCount) AS txCount
+FROM transactions
+GROUP BY Client, DepProduct, Flow;
+
+-- L1
+CREATE OR REPLACE TABLE L1 AS
+SELECT Client, DepProduct,
+       SUM(totalAmount) AS totalAmount, SUM(txCount) AS txCount
+FROM transactions
+GROUP BY Client, DepProduct;
+
+-- L0 (root)
+CREATE OR REPLACE TABLE L0 AS
+SELECT Client,
+       SUM(totalAmount) AS totalAmount, SUM(txCount) AS txCount
+FROM transactions
+GROUP BY Client;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Client	DepProduct	Flow	Channel	PayProduct	FI	Prospect	totalAmount	txCount
 Client A	CA	Sent	OLBB	Wire	Chase	Prospect X	10,000	5
