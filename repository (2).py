@@ -1,3 +1,93 @@
+MATCH (c:Client {clientId: row.Client})
+CREATE (c)-[:HAS_TOTAL_SUMMARY]->(:ClientSummary {
+  totalAmount: toFloat(row.totalAmount),
+  txCount: toInteger(row.txCount)
+});
+
+
+MATCH (c:Client {clientId: row.Client})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (dp:DepositProduct {name: row.DepProduct})
+CREATE (cs)-[:DRILLDOWN_TO]->(a1:AggSummary {
+  level:1,
+  totalAmount: toFloat(row.totalAmount),
+  txCount: toInteger(row.txCount)
+})
+CREATE (a1)-[:FOR_DEPOSIT_PRODUCT]->(dp);
+
+
+
+MATCH (c:Client {clientId: row.Client})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (cs)-[:DRILLDOWN_TO]->(a1:AggSummary {level:1})-[:FOR_DEPOSIT_PRODUCT]->(dp:DepositProduct {name: row.DepProduct})
+MATCH (f:Flow {direction: row.Flow})
+CREATE (a1)-[:DRILLDOWN_TO]->(a2:AggSummary {
+  level:2,
+  totalAmount: toFloat(row.totalAmount),
+  txCount: toInteger(row.txCount)
+})
+CREATE (a2)-[:FOR_FLOW]->(f);
+
+
+
+MATCH (c:Client {clientId: row.Client})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (cs)-[:DRILLDOWN_TO]->(a1)-[:FOR_DEPOSIT_PRODUCT]->(dp:DepositProduct {name: row.DepProduct})
+MATCH (a1)-[:DRILLDOWN_TO]->(a2)-[:FOR_FLOW]->(f:Flow {direction: row.Flow})
+MATCH (ch:Channel {name: row.Channel})
+CREATE (a2)-[:DRILLDOWN_TO]->(a3:AggSummary {
+  level:3,
+  totalAmount: toFloat(row.totalAmount),
+  txCount: toInteger(row.txCount)
+})
+CREATE (a3)-[:FOR_CHANNEL]->(ch);
+
+
+
+MATCH (c:Client {clientId: row.Client})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (cs)-[:DRILLDOWN_TO]->(a1)-[:FOR_DEPOSIT_PRODUCT]->(dp:DepositProduct {name: row.DepProduct})
+MATCH (a1)-[:DRILLDOWN_TO]->(a2)-[:FOR_FLOW]->(f:Flow {direction: row.Flow})
+MATCH (a2)-[:DRILLDOWN_TO]->(a3)-[:FOR_CHANNEL]->(ch:Channel {name: row.Channel})
+MATCH (pp:PaymentProduct {name: row.PayProduct})
+CREATE (a3)-[:DRILLDOWN_TO]->(a4:AggSummary {
+  level:4,
+  totalAmount: toFloat(row.totalAmount),
+  txCount: toInteger(row.txCount)
+})
+CREATE (a4)-[:FOR_PAYMENT_PRODUCT]->(pp);
+
+
+
+MATCH (c:Client {clientId: row.Client})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (cs)-[:DRILLDOWN_TO]->(a1)-[:FOR_DEPOSIT_PRODUCT]->(dp:DepositProduct {name: row.DepProduct})
+MATCH (a1)-[:DRILLDOWN_TO]->(a2)-[:FOR_FLOW]->(f:Flow {direction: row.Flow})
+MATCH (a2)-[:DRILLDOWN_TO]->(a3)-[:FOR_CHANNEL]->(ch:Channel {name: row.Channel})
+MATCH (a3)-[:DRILLDOWN_TO]->(a4)-[:FOR_PAYMENT_PRODUCT]->(pp:PaymentProduct {name: row.PayProduct})
+MATCH (fi:FinancialInstitution {name: row.FI})
+CREATE (a4)-[:DRILLDOWN_TO]->(a5:AggSummary {
+  level:5,
+  totalAmount: toFloat(row.totalAmount),
+  txCount: toInteger(row.txCount)
+})
+CREATE (a5)-[:FOR_FI]->(fi);
+
+
+
+
+MATCH (c:Client {clientId: row.Client})-[:HAS_TOTAL_SUMMARY]->(cs)
+MATCH (cs)-[:DRILLDOWN_TO]->(a1)-[:FOR_DEPOSIT_PRODUCT]->(dp:DepositProduct {name: row.DepProduct})
+MATCH (a1)-[:DRILLDOWN_TO]->(a2)-[:FOR_FLOW]->(f:Flow {direction: row.Flow})
+MATCH (a2)-[:DRILLDOWN_TO]->(a3)-[:FOR_CHANNEL]->(ch:Channel {name: row.Channel})
+MATCH (a3)-[:DRILLDOWN_TO]->(a4)-[:FOR_PAYMENT_PRODUCT]->(pp:PaymentProduct {name: row.PayProduct})
+MATCH (a4)-[:DRILLDOWN_TO]->(a5)-[:FOR_FI]->(fi:FinancialInstitution {name: row.FI})
+MATCH (p:Prospect {prospectId: row.Prospect})
+CREATE (a5)-[:DRILLDOWN_TO]->(a6:AggSummary {
+  level:6,
+  totalAmount: toFloat(row.totalAmount),
+  txCount: toInteger(row.txCount)
+})
+CREATE (a6)-[:FOR_PROSPECT]->(p);
+
+
+
+
 -- L6 (leaf) – full detail
 CREATE OR REPLACE TABLE L6 AS
 SELECT Client, DepProduct, Flow, Channel, PayProduct, FI, Prospect,
