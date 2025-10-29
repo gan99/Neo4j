@@ -1,55 +1,148 @@
-# queries.yaml
-client_drilldown:
+client_360_view:
+  display_name: "Client 360 Drilldown"
+  description: "Aggregated drill-down from Client to Prospect."
   enabled: true
-  display_name: "Client → Account → Rail → FI → Prospect"
-  description: "Double-click to travel: Client -[HAS]-> AccountProduct -[SENDS/RECEIVES]- PaymentProduct -[`OFFERED BY`]-> FinancialInstitution <-[`CUSTOMER OF`]- Prospect"
-  caption_property: "name"
-
-  # Optional cosmetics for node sizes & table
+  # Use a new property 'display_name' for our aggregated labels
+  caption_property: "display_name"
   mapping:
-    node_size: total_amount        # Clients/Prospects have totals; others will just default size
+    # Make node size relative to totalAmount
+    node_size: "totalAmount"
+    # Make edge width relative to txCount
+    edge_weight: "txCount"
   table_display:
-    Client: [party_id, name, total_amount, total_volume]
-    AccountProduct: [account_product_id, name]
-    PaymentProduct: [payment_product_id, name]
-    FinancialInstitution: [fi_id, name]
-    Prospect: [party_id, name, total_amount, total_volume]
-    _default: [name]
+    _default: ["name", "totalAmount", "txCount"]
 
-  # Initial graph when you pick this "Relationship Map" in the left nav
-  primary: |
-    WITH $limit AS limit, coalesce($text_search, '') AS ts
-    MATCH (c:Client)
-    WHERE ts = '' OR toLower(c.name) CONTAINS toLower(ts) OR c.party_id = ts
-    OPTIONAL MATCH (c)-[r:HAS]->(a:AccountProduct)
-    RETURN c, r, a
-    LIMIT limit
+  primary: >
+    // L0: Find Clients and show their grand totals
+    MATCH (n:Client)
+    WHERE (n.name CONTAINS $text_search OR $text_search IS NULL OR n.clientId = $text_search)
+   
+    // Get all related aggregates
+    MATCH (n)<-[:FOR_CLIENT]-(agg:AggTx)
+    WITH n, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+   
+    // Set properties on the node for sizing and display
+    SET n.totalAmount = totalAmount, n.txCount = txCount
+    SET n.display_name = n.name + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')'
+   
+    RETURN n
+    ORDER BY totalAmount DESC
+    LIMIT toInteger($limit)
 
-  # What to run on double-click, per node label
   neighbors:
-    Client: |
-      MATCH (c:Client) WHERE elementId(c) = $node_id
-      OPTIONAL MATCH (c)-[r:HAS]->(a:AccountProduct)
-      RETURN c, r, a
+    _default: >
+      // L1: Client -> DepositProduct
+      // $node_id is the elementId of the Client that was clicked
+      MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_DEPOSIT_PRODUCT]->(dp)
+      WHERE elementId(c) = $node_id
+     
+      // Aggregate totals for this path
+      WITH c, dp, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+     
+      // Set properties on the DepositProduct node for this query
+      SET dp.totalAmount = totalAmount, dp.txCount = txCount
+      SET dp.display_name = dp.name + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')'
+     
+      // Create a virtual relationship to return
+      CALL apoc.create.vRelationship(c, 'AGG_TO', {totalAmount: totalAmount, txCount: txCount}, dp) YIELD rel
+      RETURN c, rel, dp
 
-    AccountProduct: |
-      MATCH (a:AccountProduct) WHERE elementId(a) = $node_id
-      OPTIONAL MATCH (a)-[s:SENDS]->(pp1:PaymentProduct)
-      OPTIONAL MATCH (pp2:PaymentProduct)-[rcv:RECEIVES]->(a)
-      RETURN a, s, pp1, rcv, pp2
+    DepositProduct: >
+      // L2: DepositProduct -> Flow
+      // $node_id is the DepositProduct. We get Client from the history params.
+      MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_DEPOSIT_PRODUCT]->(dp)
+      WHERE elementId(dp) = $node_id AND elementId(c) = $Client_node_id
+     
+      MATCH (agg)-[:FOR_FLOW]->(f)
+     
+      WITH dp, f, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+     
+      SET f.totalAmount = totalAmount, f.txCount = txCount
+      SET f.display_name = f.direction + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')'
+     
+      CALL apoc.create.vRelationship(dp, 'AGG_TO', {totalAmount: totalAmount, txCount: txCount}, f) YIELD rel
+      RETURN dp, rel, f
 
-    PaymentProduct: |
-      MATCH (pp:PaymentProduct) WHERE elementId(pp) = $node_id
-      OPTIONAL MATCH (pp)-[ob:`OFFERED BY`]->(fi:FinancialInstitution)
-      RETURN pp, ob, fi
+    Flow: >
+      // L3: Flow -> Channel
+      MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_DEPOSIT_PRODUCT]->(dp)
+      MATCH (agg)-[:FOR_FLOW]->(f)
+      WHERE elementId(f) = $node_id
+        AND elementId(dp) = $DepositProduct_node_id
+        AND elementId(c) = $Client_node_id
+     
+      MATCH (agg)-[:FOR_CHANNEL]->(ch)
+     
+      WITH f, ch, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+     
+      SET ch.totalAmount = totalAmount, ch.txCount = txCount
+      SET ch.display_name = ch.name + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')'
+     
+      CALL apoc.create.vRelationship(f, 'AGG_TO', {totalAmount: totalAmount, txCount: txCount}, ch) YIELD rel
+      RETURN f, rel, ch
 
-    FinancialInstitution: |
-      MATCH (fi:FinancialInstitution) WHERE elementId(fi) = $node_id
-      OPTIONAL MATCH (p:Prospect)-[co:`CUSTOMER OF`]->(fi)
-      RETURN fi, co, p
+    Channel: >
+      // L4: Channel -> PaymentProduct
+      MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_DEPOSIT_PRODUCT]->(dp)
+      MATCH (agg)-[:FOR_FLOW]->(f)
+      MATCH (agg)-[:FOR_CHANNEL]->(ch)
+      WHERE elementId(ch) = $node_id
+        AND elementId(f) = $Flow_node_id
+        AND elementId(dp) = $DepositProduct_node_id
+        AND elementId(c) = $Client_node_id
+     
+      MATCH (agg)-[:FOR_PAYMENT_PRODUCT]->(pp)
+     
+      WITH ch, pp, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+     
+      SET pp.totalAmount = totalAmount, pp.txCount = txCount
+      SET pp.display_name = pp.name + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')'
+     
+      CALL apoc.create.vRelationship(ch, 'AGG_TO', {totalAmount: totalAmount, txCount: txCount}, pp) YIELD rel
+      RETURN ch, rel, pp
 
-    # Fallback if you double-click any other label
-    _default: |
-      MATCH (n) WHERE elementId(n) = $node_id
-      OPTIONAL MATCH (n)-[r]-(m)
-      RETURN n, r, m
+    PaymentProduct: >
+      // L5: PaymentProduct -> FinancialInstitution
+      MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_DEPOSIT_PRODUCT]->(dp)
+      MATCH (agg)-[:FOR_FLOW]->(f)
+      MATCH (agg)-[:FOR_CHANNEL]->(ch)
+      MATCH (agg)-[:FOR_PAYMENT_PRODUCT]->(pp)
+      WHERE elementId(pp) = $node_id
+        AND elementId(ch) = $Channel_node_id
+        AND elementId(f) = $Flow_node_id
+        AND elementId(dp) = $DepositProduct_node_id
+        AND elementId(c) = $Client_node_id
+     
+      MATCH (agg)-[:FOR_FI]->(fi)
+     
+      WITH pp, fi, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+     
+      SET fi.totalAmount = totalAmount, fi.txCount = txCount
+      SET fi.display_name = fi.name + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')'
+     
+      CALL apoc.create.vRelationship(pp, 'AGG_TO', {totalAmount: totalAmount, txCount: txCount}, fi) YIELD rel
+      RETURN pp, rel, fi
+
+    FinancialInstitution: >
+      // L6: FinancialInstitution -> Prospect
+      MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_DEPOSIT_PRODUCT]->(dp)
+      MATCH (agg)-[:FOR_FLOW]->(f)
+      MATCH (agg)-[:FOR_CHANNEL]->(ch)
+      MATCH (agg)-[:FOR_PAYMENT_PRODUCT]->(pp)
+      MATCH (agg)-[:FOR_FI]->(fi)
+      WHERE elementId(fi) = $node_id
+        AND elementId(pp) = $PaymentProduct_node_id
+        AND elementId(ch) = $Channel_node_id
+        AND elementId(f) = $Flow_node_id
+        AND elementId(dp) = $DepositProduct_node_id
+        AND elementId(c) = $Client_node_id
+     
+      MATCH (agg)-[:FOR_PROSPECT]->(p)
+     
+      WITH fi, p, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+     
+      SET p.totalAmount = totalAmount, p.txCount = txCount
+      SET p.display_name = p.name + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')'
+     
+      CALL apoc.create.vRelationship(fi, 'AGG_TO', {totalAmount: totalAmount, txCount: txCount}, p) YIELD rel
+      RETURN fi, rel, p
