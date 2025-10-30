@@ -1,3 +1,23 @@
+SELECT
+  a.client_id,
+  a.client_name,
+  COALESCE(b.account_product_id, 'Other') AS account_product_id,
+  a.flow,
+  a.txn_channel,
+  a.payment_product_nm,
+  a.prospect_fi_id,
+  a.prospect_id,
+  a.prospect_name,
+  a.total_amount,
+  a.total_volume,
+  a.month_id
+FROM graphnetwork_oneclientview_us_v10_1_sample a
+LEFT JOIN graphnetwork_oneclientview_us_v10_1_nacb_acc_uen b
+  ON (a.account_number = b.account_number OR a.uen = b.uen)
+
+
+
+
 MATCH (c:Client {clientId: row.Client})
 CREATE (c)-[:HAS_TOTAL_SUMMARY]->(:ClientSummary {
   totalAmount: toFloat(row.totalAmount),
