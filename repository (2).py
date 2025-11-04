@@ -1,3 +1,17 @@
+CREATE INDEX client_id_index FOR (c:Client) ON (c.clientid);
+CREATE INDEX deposit_product_index FOR (ap:DepositProduct) ON (ap.name);
+CREATE INDEX flow_index FOR (f:Flow) ON (f.direction);
+CREATE INDEX channel_index FOR (ch:Channel) ON (ch.name);
+CREATE INDEX payment_product_index FOR (pp:PaymentProduct) ON (pp.name);
+CREATE INDEX fi_index FOR (fi:FinancialInstitution) ON (fi.name);
+CREATE INDEX prospect_index FOR (p:Prospect) ON (p.prospectid);
+
+CREATE CONSTRAINT agg_unique IF NOT EXISTS
+FOR (a:AggTx)
+REQUIRE (a.monthId, a.client_id, a.account_product_id, a.payment_product_nm, a.flow, a.txn_channel, a.prospect_fi_id, a.prospect_id) IS UNIQUE;
+
+
+
 CALL apoc.periodic.iterate(
   "LOAD CSV WITH HEADERS FROM 'file:///transactions.csv' AS item RETURN item",
   "
