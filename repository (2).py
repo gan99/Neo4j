@@ -1,3 +1,36 @@
+CALL apoc.periodic.iterate(
+  "LOAD CSV WITH HEADERS FROM 'file:///transactions.csv' AS item RETURN item",
+  "
+  MATCH (c:Client {clientid: item.client_id})
+  MATCH (ap:DepositProduct {name: item.account_product_id})
+  ...
+  MERGE (agg:AggTx {
+      monthId: item.month_id,
+      client_id: item.client_id,
+      account_product_id: item.account_product_id,
+      payment_product_nm: item.payment_product_nm,
+      flow: item.flow,
+      txn_channel: item.txn_channel,
+      prospect_fi_id: item.prospect_fi_id,
+      prospect_id: item.prospect_id
+  })
+  SET agg.totalAmount = toFloat(item.total_amount),
+      agg.txCount = toInteger(item.total_volume)
+  MERGE (agg)-[:FOR_CLIENT]->(c)
+  MERGE (agg)-[:FOR_DEPOSIT_PRODUCT]->(ap)
+  MERGE (agg)-[:FOR_FLOW]->(f)
+  MERGE (agg)-[:FOR_CHANNEL]->(ch)
+  MERGE (agg)-[:FOR_PAYMENT_PRODUCT]->(pp)
+  MERGE (agg)-[:FOR_FI]->(fi)
+  MERGE (agg)-[:FOR_PROSPECT]->(p)
+  ",
+  {batchSize:10000, parallel:true, concurrency:8}
+)
+
+
+
+
+
 SELECT
   a.client_id,
   a.client_name,
