@@ -1,4 +1,6 @@
+While working with the payments data, we noticed some inconsistencies — specifically, a few records are missing either the payor or payee name. Because of this, we’re having difficulty mapping these transactions with the NACB customers or NACB account universe tables.
 
+I wanted to check with you — did you encounter similar issues with missing names on the Canadian side? If so, how did you handle or resolve them?
 -- Match on account_number
 SELECT
     a.client_id,
