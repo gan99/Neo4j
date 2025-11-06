@@ -1,3 +1,19 @@
+Regarding the issue you raised about how 8 million clients are appearing in the All Payments transaction data for one month — we investigated this in detail.
+
+We’ve been working on the standardization of party names, and previously, we considered only the top 30% of party names that account for the top 30% of total payment volume in the All Payments data.
+
+After increasing our scope to include the top 80% of clients by total transaction volume, we did not see much change in the BMO client count. We observed the following:
+
+The ACH data alone still includes around 7.8 million BMO clients, covering all payors and payees associated with BMO.
+
+To validate this, we revisited the ACH source file and reviewed the FI codes from the data source to ensure they are correctly mapped with the FI code lookup table (which includes transit routing lookup, BIC lookup, ABA, and ICA tables). Everything appears to be mapped correctly on our side.
+
+When we combined all other payment products (Zelle, Cards, Cheques, Wires), there were only about 190K clients in total (including both payors and payees).
+
+Please let me know if you’d like a short report or summary visualization to accompany this update.
+
+Best regards,
+
 While working with the payments data, we noticed some inconsistencies — specifically, a few records are missing either the payor or payee name. Because of this, we’re having difficulty mapping these transactions with the NACB customers or NACB account universe tables.
 
 I wanted to check with you — did you encounter similar issues with missing names on the Canadian side? If so, how did you handle or resolve them?
