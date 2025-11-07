@@ -1,3 +1,23 @@
+Commercial Client Mapping:
+
+To standardize all commercial clients, we needed to map them using either the NACB Accounts or NACB Customers data.
+
+When mapped with the NACB Accounts table, we identified around 29K commercial clients in ACH using account numbers as the primary key.
+
+To standardize using the NACB Customers table, we had to run fuzzy matching to map UENs to their respective customers and identify commercial clients.
+
+For this process, we took approximately 800K BMO customers (representing the top 80% of clients by total transaction volume) and performed fuzzy matching with NACB Customers. The process took about 7 hours to complete and resulted in a successful mapping of commercial clients.
+
+Scope of Inclusion:
+
+Do we need to include retail-to-retail (non-commercial) transactions — i.e., clients without UENs — in our model?
+
+Data Quality Validation:
+
+What approach should we follow to verify data completeness and quality to ensure no commercial clients (or other key records) were missed during the mapping or standardization process?
+
+Please let me know your thoughts
+
 Regarding the issue you raised about how 8 million clients are appearing in the All Payments transaction data for one month — we investigated this in detail.
 
 We’ve been working on the standardization of party names, and previously, we considered only the top 30% of party names that account for the top 30% of total payment volume in the All Payments data.
