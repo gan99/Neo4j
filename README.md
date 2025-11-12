@@ -1,3 +1,23 @@
+Subject: Clarification on Mapping BMO Clients with NACB Data
+
+Hi Gordon,
+
+As part of our current use case to identify commercial clients from the U.S. transaction data, we are working on obtaining the UENs for BMO clients.
+
+To achieve this, we initially attempted to map client account numbers from the transaction data with the account numbers in the NACB Account Universe table. However, we found that most clients did not match using the account number criteria.
+
+Interestingly, many of these clients were successfully found in the NACB Customer Universe data when we mapped using the customer name from the transaction data to the customer name in the NACB Customer Universe table.
+
+We have included a sample list of client accounts that were identified in the NACB Customer Universe but not present in the NACB Account Universe.
+
+Due to these discrepancies, we also could not reconcile the monthly audit balance in NACB with the total transaction amount in the U.S. transaction data.
+
+Could you please advise if there is any specific reason for this difference between the NACB Account and Customer Universe tables, or if there’s an alternative mapping approach we should consider?
+
+Thanks and regards,
+Ganesh Reddy Mannem
+
+
 Commercial Client Mapping:
 
 To standardize all commercial clients, we needed to map them using either the NACB Accounts or NACB Customers data.
