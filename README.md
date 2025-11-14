@@ -1,3 +1,22 @@
+Hi Gordon,
+
+Thanks for the quick response.
+
+I understand that the sample accounts we shared are not present in the NACB Account Universe table. However, our main question is around why these clients appear in the NACB Customer Universe table but not in the NACB Account Universe, especially since this mismatch is causing gaps in our client standardization and UEN-mapping process.
+
+To help us proceed correctly, could you please clarify:
+
+Under what conditions would a client exist only in the NACB Customer Universe but not in the Account Universe?
+
+Are these cases expected (e.g., closed accounts, non-BMO products, dormant clients, missing account mappings, etc.)?
+
+Is there any documentation or guidance on interpreting such discrepancies?
+
+Understanding the reason behind this difference will help us determine whether our current mapping logic needs adjustment or if we should handle these cases separately.
+
+Thanks again for your support,
+Ganesh
+
 Subject: Clarification on Mapping BMO Clients with NACB Data
 
 Hi Gordon,
