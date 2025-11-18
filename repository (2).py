@@ -1,3 +1,43 @@
+SELECT
+    p.pmt_id,
+    p.pmt_type,
+    p.pmt_amt,
+    p.pmt_cur,
+    p.pmt_dir,
+    p.pmt_dt,
+    p.ym_id,
+    p.pmt_cnl,
+    p.txn_channel_std,
+    p.pyr_name,
+    b.lgl_nm AS payor_std_nm,
+    b.uen AS payor_uen_std,
+    p.pyr_acct_num,
+    p.payor_fi_name,
+    p.payor_std_fi_name,
+    p.pyr_acct_fi_cd_type,
+    b.src_stm_cd AS payor_acct_src_stm_cd,
+    b.rel_uen AS payor_rel_uen,
+    b.rel_lgl_nm AS payor_rel_lgl_nm,
+
+    p.pye_name,
+    c.lgl_nm AS payee_std_nm,
+    c.uen AS payee_uen_std,
+    p.pye_acct_num,
+    p.payee_fi_name,
+    p.payee_std_fi_name,
+    p.pye_acct_fi_cd_type,
+    c.src_stm_cd AS payee_acct_src_stm_cd,
+    c.rel_uen AS payee_rel_uen,
+    c.rel_lgl_nm AS payee_rel_lgl_nm
+
+FROM pmts_batch_05 p
+LEFT JOIN arm_nacb_acc_jan_01 b
+       ON b.acct_num = p.pyr_acct_num
+      AND b.party_name = p.pyr_name
+LEFT JOIN arm_nacb_acc_jan_01 c
+       ON c.acct_num = p.pye_acct_num
+      AND c.party_name = p.pye_name;
+
 CREATE INDEX client_id_index FOR (c:Client) ON (c.clientid);
 CREATE INDEX deposit_product_index FOR (ap:DepositProduct) ON (ap.name);
 CREATE INDEX flow_index FOR (f:Flow) ON (f.direction);
