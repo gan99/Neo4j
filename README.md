@@ -1,3 +1,5 @@
+I would like to tally the transaction count which we are ingesting into the database and with the transactions which we are coming from the source. So here I would like to check it with the account number because some of the payer or payee names are missing but account numbers are present. In that case, checking with the name won't tally so I thought I could do that with the account number.Now with the account number, the transaction count which we are ingesting into the database is not adding with the transactions from the source. So here again I did some analysis where I found that some of the transactions to get the
+
 Hi Gordon,
 
 Thanks for the quick response.
