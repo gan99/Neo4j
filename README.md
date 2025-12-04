@@ -2,30 +2,61 @@ SELECT
     description,
 
     CASE
-        -- Pattern A: PPD ... payroll
-        WHEN LOWER(description) LIKE 'ppd%payroll' THEN
-            trim(regexp_extract(description, '(?i)ppd\\s+(.*?)\\s+payroll', 1))
+        ---------------------------------------------------------------------
+        -- PPD Patterns (generalized for ALL your examples)
+        ---------------------------------------------------------------------
+        WHEN LOWER(description) LIKE 'ppd %' THEN
+            trim(
+                regexp_extract(
+                    description,
+                    '(?i)ppd\\s+([a-z0-9 .,&-]+?)(?:\\s+ref=|\\s+\\d+|$)',
+                    1
+                )
+            )
 
+        ---------------------------------------------------------------------
         -- Pattern B: Zelle from <name>
+        ---------------------------------------------------------------------
         WHEN LOWER(description) LIKE 'zelle from%' THEN
             trim(regexp_extract(description, '(?i)zelle from\\s+(.*)', 1))
 
-        -- Pattern C: Web <name> ...
+        ---------------------------------------------------------------------
+        -- Pattern C: Web <name>
+        ---------------------------------------------------------------------
         WHEN LOWER(description) LIKE 'web %' THEN
-            trim(regexp_extract(description, '(?i)web\\s+([a-z ]+)', 1))
+            trim(regexp_extract(description, '(?i)web\\s+([a-z0-9 .,&-]+)', 1))
 
-        -- Pattern D: CCD <name> ...
+        ---------------------------------------------------------------------
+        -- Pattern D: CCD <name>
+        ---------------------------------------------------------------------
         WHEN LOWER(description) LIKE 'ccd %' THEN
-            trim(regexp_extract(description, '(?i)ccd\\s+([a-z ]+?)(?:\\s+ref|$)', 1))
+            trim(
+                regexp_extract(
+                    description,
+                    '(?i)ccd\\s+([a-z0-9 .,&-]+?)(?:\\s+ref|$)',
+                    1
+                )
+            )
 
+        ---------------------------------------------------------------------
         -- Pattern E: CTX <name> ... ref=
-        WHEN LOWER(description) LIKE 'ctx %ref=%' THEN
-            trim(regexp_extract(description, '(?i)ctx\\s+(.*?)\\s+ref=', 1))
+        ---------------------------------------------------------------------
+        WHEN LOWER(description) LIKE 'ctx %' THEN
+            trim(
+                regexp_extract(
+                    description,
+                    '(?i)ctx\\s+([a-z0-9 .,&-]+?)(?:\\s+ref=|$)',
+                    1
+                )
+            )
 
         ELSE NULL
     END AS extracted_name
 
 FROM transactions;
+
+
+
 
 ENEFICIARY_NAME
 Name of the receiving party (the customer who gets or sends funds).
