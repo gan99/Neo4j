@@ -1,3 +1,43 @@
+| Field Name           | Meaning                                                               |
+| -------------------- | --------------------------------------------------------------------- |
+| *IDP_WAREHOUSE_ID* | Internal unique identifier used in the institution’s data warehouse.  |
+| *IDP_AUDIT_ID*     | Internal audit tracking ID for changes, lineage, or batch processing. |
+| *IDP_DATA_DATE*    | The effective date when this data was loaded or recorded.             |
+
+| Field Name                               | Meaning                                                                                   |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------- |
+| *BODY_REC_TYPE*                        | Code indicating the type of record (e.g., header, entry detail, addenda).                 |
+| *APPLICATION*                          | Indicates the application or system source for the ACH entry.                             |
+| *BANK*                                 | Name or identifier of the bank involved (usually receiving or originating).               |
+| *ACCOUNT*                              | Customer account number associated with the ACH transaction.                              |
+| *AMOUNT*                               | Dollar amount of the ACH transaction (typically in cents without decimal).                |
+| *TXN_ROUTING_TRANSIT*                  | Routing transit number (RTN) of the receiving financial institution.                      |
+| *DEBIT_CREDIT_INDICATOR*               | Indicates if the entry is a *debit (D)* or *credit (C)*.                              |
+| *ON_US_INDICATOR*                      | Flag showing whether the transaction is “on-us” (same bank).                              |
+| *STANDARD_ENTRY_CLASS*                 | The NACHA *SEC Code* (e.g., PPD, CCD, CTX, WEB, TEL, IAT).                              |
+| *COMPANY_NAME*                         | Name of the originating company sending the ACH entry.                                    |
+| *COMPANY_ENTRY_DESCRIPTION*            | Description provided by the originator (e.g., “PAYROLL”, “PRENOTE”).                      |
+| *ORIGINATING_FINANCIAL_INSTITUTION_RT* | Routing number of the originating financial institution (ODFI).                           |
+| *INDIVIDUAL_ID*                        | Identifier for the receiving individual or account (varies by SEC Code).                  |
+| *TRACE_NUMBER_RT*                      | First 8 digits of the ACH trace number = ODFI routing number.                             |
+| *TRACE_NUMBER_SEQUENCE*                | The sequence number (last 7 digits) of the ACH trace number.                              |
+| *POSTING_TRANSACTION_DESCRIPTION*      | Description used when posting the transaction to the account (e.g., bank statement text). |
+
+| Field Name                          | Meaning                                               |
+| ----------------------------------- | ----------------------------------------------------- |
+| *FISERV_ORIGINATION_RT*           | Originator RT number as processed through *Fiserv*. |
+| *FISERV_ORIGINATION_ACCOUNT*      | Origination account used within Fiserv.               |
+| *ORIGINATION_ACCOUNT_BANK_NUMBER* | Bank number associated with the originating account.  |
+
+| Field Name              | Meaning                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------- |
+| *DATE_POSTED*         | The date the ACH transaction posted to the account.                                             |
+| *ORGINATOR_ID*        | Unique ID of the ACH originator (usually EIN or assigned by ODFI).                              |
+| *ORIGINATOR_NAME*     | Name of the entity initiating the ACH entry.                                                    |
+| *COMPANY_ID*          | Originator’s company identification (10-digit NACHA field).                                     |
+| *ORIGINATOR_TAN_DATE* | Possibly “Transmission/Tracking/Transaction Assignment Number Date” – internal processing date. |
+
+
 Hi Annalisa,
 Thank you for the update.
 I wanted to let you know that I have a planned vacation day on December 26. I have already informed David and added the OOO entry to my calendar for that day. Could you please kindly approve this from your side as well?
