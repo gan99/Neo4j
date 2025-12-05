@@ -1,11 +1,13 @@
-Hi Thibault,
-Yes, I was able to size the cases with missing prospect names, and here are the major areas where the gaps are most significant:
-[Payment Type 1] – ~[X]% of transactions missing prospect names
-[Payment Type 2] – ~[X]% missing
-[Payment Type 3] – ~[X]% missing
-These categories represent the largest portions of incomplete data and should help us prioritize which payment types to address first.
-Let me know if you'd like a deeper breakdown by system or volume.
-
+Since cheques appear to have a disproportionately high number of missing prospect and FI values compared to other payment products, we would like to understand the root cause and determine whether this information is available upstream.
+Could you please advise whether there is a VisionIP UI or any internal tool that would allow us to further investigate these missing fields? Any guidance on where prospect name and FI mapping for cheque transactions is expected to originate would also be helpful.
+For reference, here are a few sample Transaction IDs with missing information:
+1170391145677568
+1185592776000268
+1185570117662468
+1181371389697768
+1183238515293868
+1183221494501718
+Thanks in advance for your support. Please let us know if you would like us to share additional samples or analysis.
 
 
 
