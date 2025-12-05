@@ -1,59 +1,10 @@
-SELECT 
-    description,
-
-    CASE
-        ---------------------------------------------------------------------
-        -- PPD Patterns (generalized for ALL your examples)
-        ---------------------------------------------------------------------
-        WHEN LOWER(description) LIKE 'ppd %' THEN
-            trim(
-                regexp_extract(
-                    description,
-                    '(?i)ppd\\s+([a-z0-9 .,&-]+?)(?:\\s+ref=|\\s+\\d+|$)',
-                    1
-                )
-            )
-
-        ---------------------------------------------------------------------
-        -- Pattern B: Zelle from <name>
-        ---------------------------------------------------------------------
-        WHEN LOWER(description) LIKE 'zelle from%' THEN
-            trim(regexp_extract(description, '(?i)zelle from\\s+(.*)', 1))
-
-        ---------------------------------------------------------------------
-        -- Pattern C: Web <name>
-        ---------------------------------------------------------------------
-        WHEN LOWER(description) LIKE 'web %' THEN
-            trim(regexp_extract(description, '(?i)web\\s+([a-z0-9 .,&-]+)', 1))
-
-        ---------------------------------------------------------------------
-        -- Pattern D: CCD <name>
-        ---------------------------------------------------------------------
-        WHEN LOWER(description) LIKE 'ccd %' THEN
-            trim(
-                regexp_extract(
-                    description,
-                    '(?i)ccd\\s+([a-z0-9 .,&-]+?)(?:\\s+ref|$)',
-                    1
-                )
-            )
-
-        ---------------------------------------------------------------------
-        -- Pattern E: CTX <name> ... ref=
-        ---------------------------------------------------------------------
-        WHEN LOWER(description) LIKE 'ctx %' THEN
-            trim(
-                regexp_extract(
-                    description,
-                    '(?i)ctx\\s+([a-z0-9 .,&-]+?)(?:\\s+ref=|$)',
-                    1
-                )
-            )
-
-        ELSE NULL
-    END AS extracted_name
-
-FROM transactions;
+Hi Thibault,
+Yes, I was able to size the cases with missing prospect names, and here are the major areas where the gaps are most significant:
+[Payment Type 1] – ~[X]% of transactions missing prospect names
+[Payment Type 2] – ~[X]% missing
+[Payment Type 3] – ~[X]% missing
+These categories represent the largest portions of incomplete data and should help us prioritize which payment types to address first.
+Let me know if you'd like a deeper breakdown by system or volume.
 
 
 
