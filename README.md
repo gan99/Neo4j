@@ -1,3 +1,12 @@
+SELECT
+    bmo_client_id,
+    bmo_client_name,
+    COUNT(DISTINCT payment_product) AS payment_product_cnt
+FROM bmo_transactions
+GROUP BY bmo_client_id, bmo_client_name
+ORDER BY payment_product_cnt DESC
+LIMIT 10;
+
 Since cheques appear to have a disproportionately high number of missing prospect and FI values compared to other payment products, we would like to understand the root cause and determine whether this information is available upstream.
 Could you please advise whether there is a VisionIP UI or any internal tool that would allow us to further investigate these missing fields? Any guidance on where prospect name and FI mapping for cheque transactions is expected to originate would also be helpful.
 For reference, here are a few sample Transaction IDs with missing information:
