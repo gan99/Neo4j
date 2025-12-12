@@ -1,3 +1,17 @@
+Hi Doug,
+
+Thank you for your quick response.
+
+I’m sharing the VisionIP dataset extract for the routing transit numbers we mentioned earlier. This includes the dates and sequence numbers for those items, sourced directly from the visionip.V_L1_VISIONIP_US_FRAUD_AIF table (Jan 2025).
+
+Please let me know if you need any additional samples, fields, or if a larger timeframe would help with identifying the routing numbers or matching them to the appropriate financial institutions.
+
+Looking forward to your insights.
+
+Regards,
+Ganesh Reddy Mannem
+
+
 SELECT
     bmo_client_id,
     bmo_client_name,
