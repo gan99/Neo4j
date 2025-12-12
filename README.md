@@ -1,5 +1,16 @@
 Hi Jennifer,
 
+Thank you for your response.
+
+We are currently working with the January dataset, and as of now, the most recent data has not yet flowed into our project pipeline. We will need some time to process the latest data once it becomes available before we can extract and share more recent samples with you.
+
+I’ll keep you updated as soon as we receive the newer data.
+
+Regards,
+Ganesh Reddy Mannem
+
+Hi Jennifer,
+
 Thank you for checking.
 
 At the moment, we are working only with the January dataset from visionip.V_L1_VISIONIP_US_FRAUD_AIF, and we do not have access to any data within the past 90 days. Unfortunately, we’re unable to retrieve more recent samples at this time.
