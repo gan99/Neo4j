@@ -1,3 +1,15 @@
+Hi Jennifer,
+
+Thank you for checking.
+
+At the moment, we are working only with the January dataset from visionip.V_L1_VISIONIP_US_FRAUD_AIF, and we do not have access to any data within the past 90 days. Unfortunately, we’re unable to retrieve more recent samples at this time.
+
+Please let me know if the January data is sufficient, or if you need anything else from our side.
+
+Regards,
+Ganesh Reddy Mannem
+
+
 Hi Doug,
 
 Thank you for your quick response.
