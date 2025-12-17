@@ -1,3 +1,17 @@
+Hi Jeff, Doug, and Crystal,
+
+I hope you’re doing well.
+
+I wanted to follow up on the January routing transit numbers that I shared earlier from the VisionIP checks dataset. Please let me know if you’ve had a chance to review them and whether they align with any known financial institutions on your side.
+
+I understand the limitation around data older than 90 days, and we appreciate you looking into the January samples in the meantime. Any insights or guidance—either on identifying the routing numbers or confirming whether a lookup/reference exists—would be very helpful for our analysis.
+
+Thank you for your time and support. Please let me know if you need any additional details from our end.
+
+Best regards,
+Ganesh Reddy Mannem
+
+
 Hi Jennifer,
 
 Thank you for your response.
