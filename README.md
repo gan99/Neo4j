@@ -1,3 +1,21 @@
+Hi Doug,
+
+Thank you for checking.
+
+I believe the confusion may be due to formatting when the values were pasted into Outlook. The routing transit numbers in the source table do include leading zeros, but those zeros were not preserved in the email.
+
+For example, the actual values from the table look like:
+
+099837688
+
+000605679
+
+007876368
+…etc.
+
+The RTs are not being translated; they are stored as-is in visionip.V_L1_VISIONIP_US_FRAUD_AIF. Please let me know if reviewing the full values with leading zeros helps validate whether these align with Canadian FIs.
+
+
 Hope you’re doing well.
 
 I wanted to follow up regarding the January routing transit numbers we shared from the visionip.V_L1_VISIONIP_US_FRAUD_AIF dataset. I understand the limitations around data retention on your side, and we appreciate you taking a look with the samples we provided.
