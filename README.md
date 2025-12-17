@@ -1,3 +1,5 @@
+Thanks for the clarification. That helps.
+We’re primarily looking to understand how the check was originally presented, so using the original RT from ORIG_MICR_LINE_TXT makes sense. We’ll review the RT between the first and second < and see how it maps against our reference tables.
 Hi Doug,
 
 Thank you for checking.
