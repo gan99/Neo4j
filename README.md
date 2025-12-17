@@ -1,3 +1,13 @@
+Hope you’re doing well.
+
+I wanted to follow up regarding the January routing transit numbers we shared from the visionip.V_L1_VISIONIP_US_FRAUD_AIF dataset. I understand the limitations around data retention on your side, and we appreciate you taking a look with the samples we provided.
+
+Please let us know if you were able to identify or recognize any of the January routing numbers, or if there are any preliminary insights you can share. If additional context or details from our side would be helpful, I’m happy to provide whatever is available.
+
+Thanks again for your support on this. Looking forward to your update.
+
+
+
 Hi Jeff, Doug, and Crystal,
 
 I hope you’re doing well.
