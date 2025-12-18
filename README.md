@@ -1,5 +1,21 @@
 Hi Jeff, Katherine, and Nanda,
 
+Thank you for the clarifications.
+
+Understood that these are valid Canadian RTs, and the apparent extra zero in our table is due to formatting. The correct xxxxx-xxx format (for example, 10099-016) must retain the dash to identify them as Canadian RTs, and therefore they cannot be matched against U.S. routing number tables. We also note that the RT appears correctly with the dash in the AIF file.
+
+As suggested, we’ll cross-check against ORIG_MICR_LINE_TXT in the production IDP table to confirm alignment. Additionally, please let us know if there is a Canadian RT lookup or reference table available that we could use to map these RTs to the corresponding financial institutions.
+
+Thanks again for your help.
+
+Best regards,
+Ganesh Reddy Mannem
+
+If you want it more direct or more informal, I can adjust the wording.
+
+
+Hi Jeff, Katherine, and Nanda,
+
 Thank you all for the detailed clarifications — this is very helpful.
 
 Based on your inputs, my understanding is:
