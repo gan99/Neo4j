@@ -1,3 +1,17 @@
+Hi Crystal,
+
+Hope you’re doing well. Thank you for the clarification and for level setting — that’s very helpful.
+
+Understood that the data provided downstream is limited to what is derived from the MICR data, and that any longer-term requirements or enhancements could involve additional costs due to FIS being the service provider. We’ll keep that in mind as we assess scope.
+
+Thanks as well for following up with Nick and for sharing the ABA resources. We’ll review the lookup option and discuss internally whether this is something Fraud or another team may want to pursue, given the integration considerations and usage limits.
+
+Appreciate you taking the time to share this context and guidance.
+
+Best regards,
+Ganesh Reddy Mannem
+
+
 Hi Jeff, Katherine, and Nanda,
 
 Thank you for the clarifications.
