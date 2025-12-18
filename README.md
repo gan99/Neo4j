@@ -1,3 +1,9 @@
+Team,
+Nanda has shared a file 2025-12-12-Banks Numeric List.pdf, which contains routing numbers and corresponding bank names. This information is not available in the Vision system.
+He obtained this file from an online source while browsing payment-related information and shared it from the Sanada payment system web page.
+Nanda has requested that we check with the IDP bank data to confirm whether this information exists in any other tables within IDP. He also mentioned that FIS Xisiel should not be considered the source of this information.
+Please review and let us know if IDP has this data available elsewhere.
+
 is there any way to access or integrate this data through IDP directly? We need a scalable approach, as this has to be handled for millions of transactions, and a manual or offline lookup would not be feasible.
 Please let us know if there are any supported options or recommended approaches for this.
 
