@@ -1,3 +1,6 @@
+is there any way to access or integrate this data through IDP directly? We need a scalable approach, as this has to be handled for millions of transactions, and a manual or offline lookup would not be feasible.
+Please let us know if there are any supported options or recommended approaches for this.
+
 Hi Crystal,
 
 Hope you’re doing well. Thank you for the clarification and for level setting — that’s very helpful.
