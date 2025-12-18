@@ -1,3 +1,14 @@
+Hi Nanda,
+
+Thank you for confirming.
+
+Understood that financial institution names and their mappings do not flow from VisionIP into the IDP files, and that any available FI reference data would need to be sourced directly from within IDP or other internal bank reference tables. We’ll review the available IDP sources on our side to see if anything applicable exists.
+
+Appreciate the clarification.
+
+Thanks,
+Ganesh Reddy Mannem
+
 Team,
 Nanda has shared a file 2025-12-12-Banks Numeric List.pdf, which contains routing numbers and corresponding bank names. This information is not available in the Vision system.
 He obtained this file from an online source while browsing payment-related information and shared it from the Sanada payment system web page.
