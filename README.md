@@ -1,3 +1,26 @@
+Hi Jeff, Katherine, and Nanda,
+
+Thank you all for the detailed clarifications — this is very helpful.
+
+Based on your inputs, my understanding is:
+
+The routing transit numbers we observed are valid Canadian RTs, and the extra zero at the end in our table is a formatting/representation issue rather than a true part of the RT.
+
+The correct Canadian RT format is xxxxx-xxx (for example, 10099-016), and retaining the dash is essential to correctly identify it as a Canadian RT.
+
+Since these are Canadian RTs, they cannot be evaluated against U.S. routing number lookup tables, which explains why we were unable to match them to U.S. FIs.
+
+In the VisionIP AIF file, the RT appears correctly with the dash (as noted by Katherine).
+
+As suggested by Nanda, we will also cross-verify the RTs against the ORIG_MICR_LINE_TXT field in the production IDP table to ensure consistency with our extracted values.
+
+We’ll proceed with this understanding and adjust our downstream logic to treat these as Canadian RTs sourced from check images, without attempting U.S. RT lookups.
+
+Thanks again for the collaboration and insights. Please let me know if there’s anything further you’d like us to validate on our side.
+
+Best regards,
+Ganesh Reddy Mannem
+
 Thanks for the clarification. That helps.
 We’re primarily looking to understand how the check was originally presented, so using the original RT from ORIG_MICR_LINE_TXT makes sense. We’ll review the RT between the first and second < and see how it maps against our reference tables.
 Hi Doug,
