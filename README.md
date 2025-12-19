@@ -1,3 +1,8 @@
+SELECT
+    orig_micr_line_txt,
+    regexp_extract(orig_micr_line_txt, '<([^<]+)<', 1) AS routing_number
+FROM your_table_name;
+
 Hi Nanda,
 
 Thank you for confirming.
