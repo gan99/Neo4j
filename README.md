@@ -1,3 +1,18 @@
+Hi Max,
+
+Thank you for the explanation — this helps a lot.
+
+Understood that some RTs (for example those starting with 5* ) are internal BMO tickets and not external bank routing numbers, and that we can use other IDP fields like the BMO Item Indicator to identify them. We’ll account for this in our logic.
+
+Also noted that Payor and Payee names are not indexed and won’t be available in ID or VisionIP data, even though they exist on the check image. We’ll proceed with that understanding.
+
+We’ll look into publicly available routing number references for external banks where needed, and will reach out if we need help interpreting VisionIP L1 data.
+
+Thanks again for the guidance.
+
+Best regards,
+Ganesh Reddy Mannem
+
 SELECT
     orig_micr_line_txt,
     regexp_extract(orig_micr_line_txt, '<([^<]+)<', 1) AS routing_number
