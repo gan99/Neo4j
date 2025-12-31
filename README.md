@@ -1,3 +1,11 @@
+Integrated February payments data into our pipeline and completed initial validation.
+
+Worked on Zelle and Corporate Cards data processing as part of the February load.
+
+Collaborated with Rakshitha on FI name standardization, and generated the FI lookup for February.
+
+Joined the payments data with the NACB Account Universe table and identified ~154K clients in the February dataset.
+
 Hi Max,
 
 Thank you for the explanation — this helps a lot.
