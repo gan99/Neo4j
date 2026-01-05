@@ -1,3 +1,14 @@
+Hi Michael,
+
+Thank you for checking the environment and setting up Python along with the required packages.
+
+To proceed further, we will need access to the development server so that we can make the necessary changes to ensure the web application runs correctly on the development site. Once we have it working successfully in that environment, we will share the complete deployment code along with detailed setup and deployment instructions.
+
+Please let us know the next steps to get access to the development server.
+
+Thanks,
+Ganesh Reddy Mannem
+
 Integrated February payments data into our pipeline and completed initial validation.
 
 Worked on Zelle and Corporate Cards data processing as part of the February load.
