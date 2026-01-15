@@ -1,3 +1,47 @@
+Yes — to host a FastAPI/Uvicorn app behind IIS, you typically configure IIS as a reverse proxy using Application Request Routing (ARR) and URL Rewrite.
+
+Steps usually include:
+
+Install ARR and URL Rewrite on the IIS server
+
+Enable Proxy in ARR settings
+
+Add a rewrite rule to forward traffic to Uvicorn (e.g., http://localhost:8000)
+
+Run Uvicorn as a Windows service or background process
+
+IIS then acts as the front-end, and Uvicorn handles the app.
+
+Hi Michael,
+
+Thank you for the update, and I’m glad to hear that the uvicorn app.main:app step is working correctly now.
+
+You’re correct that Uvicorn does not natively integrate with IIS. The typical approach is to run Uvicorn as a standalone service and use IIS as a reverse proxy, which is where Application Request Routing (ARR) and URL Rewrite come into play. IIS would forward incoming HTTP requests to the Uvicorn port where the application is running.
+
+At a high level, the common IIS setup includes:
+
+Enabling Application Request Routing (ARR)
+
+Enabling URL Rewrite
+
+Configuring IIS to proxy requests to the local Uvicorn endpoint (for example, http://localhost:<port>)
+
+From the application side, no special IIS-specific configuration is required beyond ensuring:
+
+The correct host and port are exposed in Uvicorn
+
+Any required environment variables are set on the server
+
+The app is run as a persistent service (for example, via a Windows service or task scheduler)
+
+If ARR is approved and added to the servers, this approach should work well. Otherwise, an alternative is to place a lightweight reverse proxy (such as Nginx) in front of Uvicorn, but that depends on server constraints and policies.
+
+Please let me know once the IIS direction is finalized, and I’ll be happy to help validate or adjust the application setup as needed.
+
+Thanks,
+Ganesh Reddy Mannem
+
+
 Hi Michael,
 
 Thank you for checking the environment and setting up Python along with the required packages.
