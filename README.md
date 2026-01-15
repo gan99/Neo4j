@@ -1,3 +1,4 @@
+--host 127.0.0.1 --port 8000
 Yes — to host a FastAPI/Uvicorn app behind IIS, you typically configure IIS as a reverse proxy using Application Request Routing (ARR) and URL Rewrite.
 
 Steps usually include:
