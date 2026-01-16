@@ -1,3 +1,11 @@
+MATCH (dp:DepositProduct)
+SET dp.short_name =
+  CASE
+    WHEN dp.name CONTAINS '__'
+    THEN last(split(dp.name, '__'))
+    ELSE dp.name
+  END;
+
 --host 127.0.0.1 --port 8000
 Yes — to host a FastAPI/Uvicorn app behind IIS, you typically configure IIS as a reverse proxy using Application Request Routing (ARR) and URL Rewrite.
 
