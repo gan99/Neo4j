@@ -1,3 +1,23 @@
+Hi [Name],
+
+I hope you’re doing well.
+
+I wanted to check if you could help us with **day balance data for BMO customers**. We are looking to understand the availability, structure, and coverage of daily balances to support our analysis and reporting needs.
+
+Could you please let us know:
+
+* Whether day balance data is available for BMO customers
+* The time range covered
+* Any key fields or tables we should reference
+
+If there are any dependencies or approvals needed to access this data, please let us know as well.
+
+Thanks in advance for your help.
+
+Best regards,
+Ganesh Reddy Mannem
+
+
 Created a short_name attribute for deposit_products, which now correctly displays the Level 4 product names in the visualization and improves readability in the client drill-down.
 
 Updated the Neo4j data model and queries to ensure the new attribute integrates seamlessly with the existing hierarchy.
