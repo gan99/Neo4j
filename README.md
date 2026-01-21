@@ -1,3 +1,13 @@
+Hi Gordon — since you manage the ARM/AIM Feature Store and related data pipelines, could you please advise on:
+
+Availability of daily account-level balance data for U.S. commercial customers
+
+Relevant source systems or feature tables
+
+Any coverage or limitations we should be aware of
+
+Your guidance would be greatly appreciated.
+
 Hi Yanyun,
 
 Thank you for the clarification.
