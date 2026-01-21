@@ -1,3 +1,17 @@
+Created a short_name attribute for deposit_products, which now correctly displays the Level 4 product names in the visualization and improves readability in the client drill-down.
+
+Updated the Neo4j data model and queries to ensure the new attribute integrates seamlessly with the existing hierarchy.
+
+Continued working with Michael on deploying the web application source code to the development server.
+
+Assisted with validating the Python environment setup and resolving issues related to running the application using uvicorn app.main:app.
+
+Collaborated on deployment architecture discussions, including IIS integration, reverse proxy considerations, and Application Request Routing (ARR) requirements.
+
+Provided guidance on application setup flow, including the login-based Neo4j authentication and end-to-end client drill-down functionality for better understanding and testing.
+
+Ongoing support to stabilize the application in the dev environment before sharing finalized deployment and setup documentation.
+
 MATCH (dp:DepositProduct)
 SET dp.short_name =
   CASE
