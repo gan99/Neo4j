@@ -1,3 +1,21 @@
+Hi [Data SME’s Name],
+
+I hope you’re doing well.
+
+I wanted to check if we have access to **daily (day-level) balance data** for BMO customers at the **account level**. Specifically, we are looking for balances mapped to individual accounts for BMO customers, which would help support our ongoing analysis and reporting.
+
+Could you please let us know:
+
+* Whether this data is available
+* The source/table where it can be accessed
+* Any known limitations or coverage details (date range, account types, etc.)
+
+Thanks in advance for your help. Please let me know if you need any additional context from my side.
+
+Best regards,
+Ganesh Reddy Mannem
+
+
 Hi [Name],
 
 I hope you’re doing well.
