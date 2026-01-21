@@ -1,3 +1,16 @@
+Hi Yanyun,
+
+Thank you for the clarification.
+
+To narrow this down, we are looking for commercial customers across all lines of business in BMO, and we are interested in daily balances for all types of accounts (including deposit and lending accounts). Our current focus is on U.S. data only.
+
+Since Gordon is already included in this thread, his guidance on the ARM/AIM Feature Store and available pipelines would be very helpful.
+
+Please let me know if there’s anything else we should clarify from our side.
+
+Thanks,
+Ganesh Reddy Mannem
+
 Hi [Data SME’s Name],
 
 I hope you’re doing well.
