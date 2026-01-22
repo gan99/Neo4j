@@ -1,3 +1,32 @@
+Hi Yanyun,
+
+Thank you for the explanation.
+
+We already have access to the NACB customer universe and NACB account universe tables, and we see that they contain monthly-level balances.
+
+Hi Gordon — could you please help us identify the source systems or tables that can be used to obtain daily account-level balances for these accounts? Any guidance on existing daily tables or scripts would be very helpful.
+
+Thanks,
+Ganesh Reddy Mannem
+
+Hi Yanyun,
+
+Thank you for the detailed explanation.
+
+We already have access to the **NACB customer universe** and **NACB account universe** datasets, and we understand that these are curated at a **monthly frequency** (including monthly balances). This has been helpful for getting started.
+
+Hi Gordon — based on this, could you please help us with:
+
+* The **source system and table details** (from systems like MECH, XIM, IPS, XAM, TSYS, etc.) that can be used to obtain **daily account-level balances**
+* Any existing **daily base tables** or pipelines that were used during feature engineering for these universes
+* Guidance on access to those source tables or scripts, if available
+
+This will help us identify the correct sources to retrieve daily balances for each account type.
+
+Thanks again for your support,
+Ganesh Reddy Mannem
+
+
 Hi Gordon — since you manage the ARM/AIM Feature Store and related data pipelines, could you please advise on:
 
 Availability of daily account-level balance data for U.S. commercial customers
