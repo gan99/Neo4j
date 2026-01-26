@@ -1,3 +1,36 @@
+Here’s a **simpler and more direct reply** you can send.
+
+Hi Gordon,
+
+Thanks for the clarification.
+
+That approach makes sense. We plan to use the **monthly account universe** to map customers to accounts and then join to the **daily balance tables** from the source systems. For now, we are mainly interested in **U.S. commercial customer daily balances**, starting with **deposit accounts**, and then expanding to lending accounts if available.
+
+Looking forward to discussing this further later this week.
+
+Thanks,
+Ganesh Reddy Mannem
+
+
+Hi Gordon,
+
+Thank you for the update — that makes sense.
+
+We understand that the **account universe is created monthly** and can be used to align commercial customers to their accounts and account numbers across systems. Our plan would be to leverage that mapping and join it with the respective **system-level daily balance tables**.
+
+At this stage, we are primarily interested in **daily balances for U.S. commercial customers** for:
+
+* **Deposit accounts** (e.g., systems like MECH / XIM)
+* **Lending accounts**, if available
+
+Once we understand which systems provide reliable daily balance tables and their corresponding schemas, we can narrow the scope further.
+
+Happy to discuss this in more detail during the session you’re planning later this week.
+
+Thanks again,
+Ganesh Reddy Mannem
+
+
 Hi Gordon,
 
 Hope you’re doing well. I wanted to follow up on the discussion below.
