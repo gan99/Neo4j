@@ -1,3 +1,23 @@
+Hi Team,
+
+I wanted to share a quick update from our recent validation.
+
+After comparing the aggregated **client account totals** with the **monthly end balances**, we are seeing that **none of the client-level totals are matching the reported monthly end balance values**. This appears to be consistent across the clients we reviewed.
+
+We are continuing to investigate potential causes, including:
+
+* Differences in balance definitions
+* Timing or cutoff logic for month-end
+* Account type or source system coverage
+
+We’ll share more details once we narrow down the root cause or get additional clarity from the source systems.
+
+Please let me know if you have any insights or areas you’d like us to focus on during the analysis.
+
+Thanks,
+Ganesh Reddy Mannem
+
+
 Hi Yanyun,
 
 Thank you for the explanation.
