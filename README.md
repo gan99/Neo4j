@@ -1,3 +1,20 @@
+Hi Gordon,
+
+Hope you’re doing well. I wanted to follow up on the discussion below.
+
+We currently have access to the **NACB customer universe** and **NACB account universe** tables, which provide **monthly-level balances**. We’re trying to identify the **source systems or tables** that can be used to obtain **daily account-level balances** for U.S. commercial customers across account types.
+
+Could you please advise on:
+
+* Which source systems/tables we should look at for daily balances
+* Whether any existing daily datasets or scripts are available
+
+Your guidance would really help us move forward.
+
+Thanks in advance,
+Ganesh Reddy Mannem
+
+
 Hi Team,
 
 I wanted to share a quick update from our recent validation.
