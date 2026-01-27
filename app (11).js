@@ -1,5 +1,40 @@
 WITH filtered_payments AS (
     SELECT
+        CASE
+            WHEN lower(payment_type) = 'wire' THEN 'wire'
+            WHEN lower(payment_type) = 'cheque' THEN 'cheque'
+            WHEN lower(payment_type) = 'ach' THEN 'ach'
+            ELSE 'other'
+        END AS payment_category
+    FROM payments
+    WHERE amount > 100000
+),
+
+category_counts AS (
+    SELECT
+        payment_category,
+        COUNT(*) AS payment_count
+    FROM filtered_payments
+    GROUP BY payment_category
+),
+
+total_count AS (
+    SELECT
+        SUM(payment_count) AS total_payments
+    FROM category_counts
+)
+
+SELECT
+    c.payment_category,
+    c.payment_count,
+    ROUND((c.payment_count / t.total_payments) * 100, 2) AS pct_of_volume
+FROM category_counts c
+CROSS JOIN total_count t
+ORDER BY pct_of_volume DESC;
+
+
+WITH filtered_payments AS (
+    SELECT
         pmt_id,
         amount,
         CASE
