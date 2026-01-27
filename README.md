@@ -1,3 +1,46 @@
+SELECT
+    a.payment_category,
+    a.txn_count,
+    ROUND(a.txn_count / t.total_txns * 100, 2) AS pct_of_volume,
+    a.total_amount,
+    ROUND(a.total_amount / t.grand_total_amount * 100, 2) AS pct_of_value
+FROM agg a
+CROSS JOIN totals t
+ORDER BY pct_of_value DESC;
+
+totals AS (
+    SELECT
+        SUM(txn_count) AS total_txns,
+        SUM(total_amount) AS grand_total_amount
+    FROM agg
+)
+
+agg AS (
+    SELECT
+        payment_category,
+        COUNT(*) AS txn_count,
+        SUM(amount) AS total_amount
+    FROM filtered_payments
+    GROUP BY payment_category
+),
+
+
+
+WITH filtered_payments AS (
+    SELECT
+        pmt_id,
+        amount,
+        CASE
+            WHEN LOWER(payment_type) = 'wire' THEN 'wire'
+            WHEN LOWER(payment_type) = 'cheque' THEN 'cheque'
+            WHEN LOWER(payment_type) = 'ach' THEN 'ach'
+            ELSE 'other'
+        END AS payment_category
+    FROM payments
+    WHERE amount > 100000
+),
+
+
 Here’s a **simpler and more direct reply** you can send.
 
 Hi Gordon,
