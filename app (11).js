@@ -5,6 +5,43 @@ WITH filtered_payments AS (
             WHEN lower(payment_type) = 'cheque' THEN 'cheque'
             WHEN lower(payment_type) = 'ach' THEN 'ach'
             ELSE 'other'
+        END AS payment_category,
+        amount
+    FROM payments
+    WHERE amount > 100000
+),
+
+category_values AS (
+    SELECT
+        payment_category,
+        SUM(amount) AS total_value
+    FROM filtered_payments
+    GROUP BY payment_category
+),
+
+total_value AS (
+    SELECT
+        SUM(total_value) AS overall_value
+    FROM category_values
+)
+
+SELECT
+    c.payment_category,
+    c.total_value,
+    ROUND((c.total_value / t.overall_value) * 100, 2) AS pct_of_value
+FROM category_values c
+CROSS JOIN total_value t
+ORDER BY pct_of_value DESC;
+
+
+
+WITH filtered_payments AS (
+    SELECT
+        CASE
+            WHEN lower(payment_type) = 'wire' THEN 'wire'
+            WHEN lower(payment_type) = 'cheque' THEN 'cheque'
+            WHEN lower(payment_type) = 'ach' THEN 'ach'
+            ELSE 'other'
         END AS payment_category
     FROM payments
     WHERE amount > 100000
