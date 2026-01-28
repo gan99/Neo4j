@@ -1,3 +1,14 @@
+Identified routing issues related to hardcoded paths in the web application when running behind IIS.
+
+Confirmed that the application will be hosted under the base path:
+/KnowledgeGraphExplorer/
+
+Next steps include updating the application to:
+
+Use relative paths
+
+Configure KnowledgeGraphExplorer as the base URL
+
 Engaged with data SMEs to understand the availability of daily account-level balance data for BMO commercial customers. Scheduled a follow-up discussion to align on the correct data sources and next steps for obtaining daily balances.
 
 
