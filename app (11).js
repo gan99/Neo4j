@@ -1,3 +1,14 @@
+<link rel="stylesheet" href="static/styles.css">
+...
+<script src="static/app.js"></script>
+
+const INFO_API_URL = 'api/connection-info';
+const QUERIES_API_URL = 'api/queries';
+const SEARCH_API_URL_TEMPLATE = 'api/search/{query_name}';
+const NEIGHBORS_API_URL_TEMPLATE = 'api/nodes/{node_id}/neighbors';
+const NODE_PROPERTIES_API_URL_TEMPLATE = 'api/nodes/{node_id}/properties';
+const EDGE_PROPERTIES_API_URL_TEMPLATE = 'api/edges/{edge_id}/properties';
+
 WITH filtered_payments AS (
     SELECT
         CASE
