@@ -1,3 +1,13 @@
+Hi Sidharth,
+
+Yes, we’re now able to view the databases in the Neo4j Browser.
+
+Thank you for your quick support in resolving this.
+
+Best regards,
+Ganesh Reddy Mannem
+
+
 Identified routing issues related to hardcoded paths in the web application when running behind IIS.
 
 Confirmed that the application will be hosted under the base path:
