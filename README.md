@@ -1,3 +1,30 @@
+Following our analysis of the Canadian payments data for August 2025, please find the findings for XTM.inc below:
+
+Transaction Summary (August 2025):
+
+Total transaction count: [XXX]
+
+Total transaction amount: [XXX]
+
+Total outgoing (sent): [XXX]
+
+Total incoming (received): [XXX]
+
+XTM to XTM transactions: [XXX]
+
+Counterparties & Banking Relationships
+
+Attached is the list of counterparties XTM.inc has transacted with during the period.
+
+We are also sharing a separate file containing the list of Financial Institutions (FIs) associated with those counterparties based on the payments data.
+
+Other FI / Competitor Relationships
+
+Attached is the list identifying XTM.inc’s financial relationships with other FIs observed in the dataset.
+
+Please let us know if you would like further breakdowns (e.g., by payment type, direction, or concentration analysis).
+
+
 Successfully ingested transaction data into the Neo4j database. The system now contains data from January 2025 through January 2026.
 
 Completed validation across the source tables, final payments dataset, and Neo4j database to ensure data consistency and accuracy.
