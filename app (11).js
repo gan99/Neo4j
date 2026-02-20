@@ -1,3 +1,10 @@
+SELECT *
+FROM pmts_01
+WHERE
+    payor_name RLIKE '(?i)^xtm( incorporated| inc\\.?| powder coating)?$'
+    OR
+    payee_name RLIKE '(?i)^xtm( incorporated| inc\\.?| powder coating)?$';
+
 <link rel="stylesheet" href="static/styles.css">
 ...
 <script src="static/app.js"></script>
