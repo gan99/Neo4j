@@ -1,3 +1,39 @@
+Hi [Name],
+
+As requested, we have completed the analysis of the Canadian payments data for August 2025 for XTM.inc.
+
+Please find attached the Excel file containing the detailed results. Below is a brief explanation of each sheet included in the document:
+
+Total Transactions and Transaction Amounts
+Summary view of total transaction count and total dollar value for XTM during the month, including directional split (sent vs. received).
+
+XTM to BMO Clients Transactions
+Transactions where XTM sent payments to BMO clients, including counts and amounts.
+
+BMO Client to XTM Transactions
+Transactions where BMO clients sent payments to XTM, including counts and amounts.
+
+XTM to XTM Transactions
+Internal transactions where both payor and payee are XTM (self-related activity).
+
+Counterparty Names
+List of all unique counterparties that had transactional relationships with XTM during the period.
+
+Interacting with FI – Transactional Level
+Financial Institutions associated with the counterparties at the transaction level, showing where those counterparties are banking based on payments data.
+
+Competitor FI Names
+List of other Financial Institutions identified as having financial relationships with XTM through observed transactions.
+
+Competitor Relationships
+Detailed mapping of XTM’s interactions with other FIs, outlining the nature and volume/value of those relationships.
+
+Please let us know if you would like additional breakdowns (e.g., payment-type distribution, concentration analysis, or trend comparison across months).
+
+Best regards,
+Ganesh Reddy Mannem
+
+
 Following our analysis of the Canadian payments data for August 2025, please find the findings for XTM.inc below:
 
 Transaction Summary (August 2025):
