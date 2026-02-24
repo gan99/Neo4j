@@ -1,3 +1,26 @@
+Here’s a clear and professional reply you can send:
+
+Hi Michael,
+
+Thank you for the update — that’s helpful.
+
+Regarding the unauthorized response, we have raised a request to obtain **dummy credentials for the Neo4j Browser** so that you can properly test the login flow. As soon as we receive those credentials, we will share them with you.
+
+On the redirect issue:
+We have reviewed the code and identified areas where the base path was not consistently applied, which may be causing the redirection to `/loginsoit` instead of staying under `/KnowledgeGraphExplorer/`. We have now updated the code to:
+
+* Ensure all redirects use the correct base path (`/KnowledgeGraphExplorer/`)
+* Standardize relative routing across the application
+* Adjust the redirect responses to prevent fallback to the root domain
+
+I am attaching the updated code with the redirect fixes included. Once deployed, this should resolve the inconsistent routing behavior.
+
+Please let me know once it is updated on the server, and we can validate it together.
+
+Thanks,
+Ganesh Reddy Mannem
+
+
 Hi [Name],
 
 As requested, we have completed the analysis of the Canadian payments data for August 2025 for XTM.inc.
