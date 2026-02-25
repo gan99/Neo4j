@@ -1,3 +1,23 @@
+Here’s a clean and structured weekly update you can send to your manager:
+
+Hi Team,
+
+Here are the updates for this week:
+
+* Successfully ingested transaction data into the Neo4j database. The dataset now includes transactions from **January 2025 through January 2026**.
+* Completed data validation across the source tables, final payments dataset, and Neo4j database to ensure accuracy and consistency.
+* Reviewed the documentation provided by Arthur and the team outlining the steps required to refresh the Canadian data on a monthly basis. Gained clarity on the refresh workflow and dependencies.
+* Continued working with Michael on the deployment of the Knowledge Graph Explorer application.
+* Shared updated code to address redirect issues and incorporated the required file path changes within the APIs to support the `/KnowledgeGraphExplorer/` base path.
+* Raised a request for dummy Neo4j credentials to support proper testing of the login flow in the development environment.
+
+Please let me know if you would like a deeper walkthrough of any of these items.
+
+Thanks,
+Ganesh Reddy Mannem
+
+
+
 Here’s a clear and professional reply you can send:
 
 Hi Michael,
