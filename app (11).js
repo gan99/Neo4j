@@ -1,3 +1,14 @@
+...
+WITH n, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
+RETURN n {
+    .*, 
+    totalAmount: totalAmount, 
+    txCount: txCount, 
+    display_name: n.name + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')'
+} AS n
+ORDER BY totalAmount DESC
+LIMIT toInteger($limit)
+
 SELECT *
 FROM pmts_01
 WHERE
