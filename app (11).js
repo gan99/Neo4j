@@ -1,3 +1,30 @@
+// 1. Create the Summary Nodes
+MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_DEPOSIT_PRODUCT]->(dp)
+MATCH (agg)-[:FOR_FLOW]->(f)
+MATCH (agg)-[:FOR_PAYMENT_PRODUCT]->(pp)
+MATCH (agg)-[:FOR_FI]->(fi)
+
+// Group by the unique dimensions
+WITH c, dp, f, pp, fi, agg.monthId AS monthId, 
+     sum(agg.totalAmount) AS total, 
+     count(agg) AS counts
+
+// Create the new node
+MERGE (s:MonthlySummary {
+    summaryId: c.clientId + '_' + monthId + '_' + dp.name + '_' + fi.name,
+    monthId: monthId,
+    totalAmount: total,
+    txCount: counts
+})
+
+// Create relationships to the dimensions
+MERGE (c)-[:HAS_SUMMARY]->(s)
+MERGE (s)-[:LINKED_TO]->(dp)
+MERGE (s)-[:LINKED_TO]->(f)
+MERGE (s)-[:LINKED_TO]->(pp)
+MERGE (s)-[:LINKED_TO]->(fi)
+
+
 ...
 WITH n, sum(agg.totalAmount) AS totalAmount, sum(agg.txCount) AS txCount
 RETURN n {
