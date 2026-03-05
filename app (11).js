@@ -1,3 +1,21 @@
+CALL apoc.periodic.iterate(
+  "MATCH (c:Client) RETURN c",
+  "MATCH (c)<-[:FOR_CLIENT]-(agg:AggTx)
+   WITH c, agg.monthId AS month, 
+        sum(agg.totalAmount) AS monthlyAmt, 
+        sum(agg.txCount) AS monthlyCount
+   
+   MERGE (s:MonthlySummary {summaryId: c.clientId + '_' + month})
+   ON CREATE SET 
+       s.monthId = month,
+       s.clientId = c.clientId,
+       s.totalAmount = monthlyAmt,
+       s.txCount = monthlyCount
+   
+   MERGE (c)-[:HAS_SUMMARY]->(s)",
+  {batchSize: 5000, parallel: true}
+)
+
 // 1. Create the Summary Nodes
 MATCH (c:Client)<-[:FOR_CLIENT]-(agg:AggTx)-[:FOR_DEPOSIT_PRODUCT]->(dp)
 MATCH (agg)-[:FOR_FLOW]->(f)
