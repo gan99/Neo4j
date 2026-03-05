@@ -1,3 +1,22 @@
+CALL apoc.periodic.iterate(
+  "MATCH (agg:AggTx {monthId: '2025-01'}) 
+   RETURN agg",
+  "MATCH (agg)-[:FOR_CLIENT]->(c:Client)
+   WITH c, agg.monthId AS month, 
+        sum(agg.totalAmount) AS monthlyAmt, 
+        sum(agg.txCount) AS monthlyCount
+   
+   MERGE (s:MonthlySummary {summaryId: c.clientId + '_' + month})
+   ON CREATE SET 
+       s.monthId = month,
+       s.clientId = c.clientId,
+       s.totalAmount = monthlyAmt,
+       s.txCount = monthlyCount
+   
+   MERGE (c)-[:HAS_SUMMARY]->(s)",
+  {batchSize: 10000, parallel: false} // Parallel FALSE is safer for MERGE
+)
+
 primary: >
     WITH [i IN range(0, toInteger($months) - 1) | substring(toString(date() - duration({months: i})), 0, 7)] AS validMonths
     MATCH (n:Client)
