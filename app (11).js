@@ -1,3 +1,19 @@
+primary: >
+    WITH [i IN range(0, toInteger($months) - 1) | substring(toString(date() - duration({months: i})), 0, 7)] AS validMonths
+    MATCH (n:Client)
+    WHERE (n.name CONTAINS $text_search OR n.clientId = $text_search)
+    
+    // Hop to the pre-calculated summaries
+    OPTIONAL MATCH (n)-[:HAS_SUMMARY]->(s:MonthlySummary)
+    WHERE s.monthId IN validMonths
+    
+    WITH n, sum(s.totalAmount) AS totalAmount, sum(s.txCount) AS txCount
+    
+    RETURN n, totalAmount, txCount,
+           n.name + ' (' + txCount + ' txns, $' + apoc.number.format(totalAmount) + ')' AS calculated_display_name
+    ORDER BY totalAmount DESC
+    LIMIT toInteger($limit)
+
 CALL apoc.periodic.iterate(
   "MATCH (c:Client) RETURN c",
   "MATCH (c)<-[:FOR_CLIENT]-(agg:AggTx)
