@@ -1,3 +1,14 @@
+Hi Lurdu,
+
+The DB team has scheduled a **Neo4j server restart at 8 PM today**.
+
+In the meantime, we tested the web application and found that **`config.py` is not able to read the `.env` file**, where the **Neo4j server URI and database name** are defined. Because of this, the application is currently **not able to establish a connection to the database**.
+
+We have reached out to the DEV team to understand the mechanism they are using on the server for **declaring and loading environment variables**, so we can align the configuration accordingly.
+
+Will keep you posted once we receive an update.
+
+
 Here’s a clean and structured weekly update you can send to your manager:
 
 Hi Team,
